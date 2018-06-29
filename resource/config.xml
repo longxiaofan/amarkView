@@ -1,0 +1,9 @@
+<BR>
+        <SystemUser>
+                <User id="1" user="admin" password="" level="0"/>
+	</SystemUser>
+        <WelcomeBaseInfo user="admin" password="" savePassword="0" ip="192.168.1.89" port="18000" unionControl="1"/>
+	<Device ip="" port="">
+                <Channel/>
+	</Device>
+</BR>

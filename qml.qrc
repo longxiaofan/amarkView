@@ -1,0 +1,41 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>resource/background.png</file>
+        <file>resource/backgroundcenter.png</file>
+        <file>resource/channelDragIcon.png</file>
+        <file>resource/channelMainIcon.png</file>
+        <file>resource/checked.png</file>
+        <file>resource/closeSignalWindow1.png</file>
+        <file>resource/closeSignalWindow2.png</file>
+        <file>resource/config.xml</file>
+        <file>resource/deleteScene1.png</file>
+        <file>resource/deleteScene2.png</file>
+        <file>resource/errorMessageBox.png</file>
+        <file>resource/exit.png</file>
+        <file>resource/loginGroup.png</file>
+        <file>resource/loginPsw.png</file>
+        <file>resource/loginUsr.png</file>
+        <file>resource/mainBtn1.png</file>
+        <file>resource/mainBtn2.png</file>
+        <file>resource/roomLock.png</file>
+        <file>resource/roomUnLock.png</file>
+        <file>resource/saveScene1.png</file>
+        <file>resource/saveScene2.png</file>
+        <file>resource/saveScene3.png</file>
+        <file>resource/unchecked.png</file>
+        <file>resource/updateScene1.png</file>
+        <file>resource/updateScene2.png</file>
+        <file>GroupDisplayItem.qml</file>
+        <file>LoginPage.qml</file>
+        <file>MainToolBarButton.qml</file>
+        <file>OperatePage.qml</file>
+        <file>PreviewToolBarItem.qml</file>
+        <file>SignalWindow.qml</file>
+        <file>SignalWindowVirDisplay.qml</file>
+        <file>StandardToolBarItem.qml</file>
+        <file>resource/test.png</file>
+        <file>SuspendBallItem.qml</file>
+    </qresource>
+</RCC>
