@@ -24,8 +24,9 @@ struct sUnionScene
     QList<sSignalWindow> lstWindow;
 };
 
-class QUdpSocket;
+class SearchDeviceUdp;
 class QTcpSocket;
+class QUdpSocket;
 class BCVedioManager;
 class MainManager : public QObject
 {
@@ -36,7 +37,8 @@ class MainManager : public QObject
     Q_PROPERTY(QString welcomePageBaseInfo_port READ welcomePageBaseInfo_port WRITE setWelcomePageBaseInfo_port)
     Q_PROPERTY(QString welcomePageBaseInfo_savePassword READ welcomePageBaseInfo_savePassword WRITE setWelcomePageBaseInfo_savePassword)
     Q_PROPERTY(QString welcomePageBaseInfo_unionControl READ welcomePageBaseInfo_unionControl WRITE setWelcomePageBaseInfo_unionControl)
-    Q_PROPERTY(bool isPad READ isPad)
+    Q_PROPERTY(QString welcomePageBaseInfo_previewip READ welcomePageBaseInfo_previewip WRITE setWelcomePageBaseInfo_previewip)
+    Q_PROPERTY(QString welcomePageBaseInfo_previewport READ welcomePageBaseInfo_previewport WRITE setWelcomePageBaseInfo_previewport)
 
 public:
     MainManager();
@@ -48,7 +50,10 @@ public:
     void AppendLog(const QString &log);             // 添加QML日志信息
 
     Q_INVOKABLE void SaveWelcomePageBaseInfo();     // 保存欢迎页的基础数据
-    Q_INVOKABLE void Login();                       // 登录
+    Q_INVOKABLE void LoginByServer();               // 服务器登录或用户鉴权
+    Q_INVOKABLE void LoginByDemoMode();             // 根据演示模式进入软件
+    Q_INVOKABLE void LoginByDirect();               // 直连设备
+    Q_INVOKABLE void Authentication();              // 用户鉴权
 
     // 指令接口
     Q_INVOKABLE void gwinsize(int gid, int winid, int chid, int l, int t, int r, int b);
@@ -75,9 +80,6 @@ public:
     // 穿透
     Q_INVOKABLE void SendRemoteCmd(int chid, QString cmd);
 
-    bool m_isPad;
-    bool isPad();
-
     // 欢迎页接口
     QString welcomePageBaseInfo_user();
     QString welcomePageBaseInfo_password();
@@ -85,6 +87,8 @@ public:
     QString welcomePageBaseInfo_port();
     QString welcomePageBaseInfo_savePassword();
     QString welcomePageBaseInfo_unionControl();
+    QString welcomePageBaseInfo_previewip();
+    QString welcomePageBaseInfo_previewport();
 
     void setWelcomePageBaseInfo_user(const QString &text);
     void setWelcomePageBaseInfo_password(const QString &text);
@@ -92,6 +96,15 @@ public:
     void setWelcomePageBaseInfo_port(const QString &text);
     void setWelcomePageBaseInfo_savePassword(const QString &text);
     void setWelcomePageBaseInfo_unionControl(const QString &text);
+    void setWelcomePageBaseInfo_previewip(const QString &text);
+    void setWelcomePageBaseInfo_previewport(const QString &text);
+
+    // 搜索设备调用接口
+    void AppendOnlineDevice(const QString &name, const QString &ip, int port, const QString &mask, const QString &gateway, const QString &mac);
+    void AppendOnlinePreview(const QString &ip, int port, const QString &mac);
+
+public slots:
+    void onGWinsize(int gid, int winid, int chid, int l, int t, int r, int b);
 
 private slots:
     void onRecvTcpMessage();
@@ -100,6 +113,9 @@ private slots:
     void onCheckoutRequestFormat();
 
 private:
+    // 请求设备规模
+    void RequestFormat();
+
     void initRemoteIPList();
     void initConfigFile();
     // 第三个参数依次内容为CHID CHTYPE CHNAME
@@ -139,6 +155,8 @@ private:
     QString m_welcomePageBaseInfo_port;
     QString m_welcomePageBaseInfo_savePassword;
     QString m_welcomePageBaseInfo_unionControl;
+    QString m_welcomePageBaseInfo_previewip;
+    QString m_welcomePageBaseInfo_previewport;
 
     // 系统用户
     struct sUser {
@@ -150,8 +168,8 @@ private:
     QList<sUser>    m_lstSystemUser;    // system user
     int             m_currentUserID;
 
-    // 通讯TCP
-    QTcpSocket      *m_pTcpSocket;
+    QTcpSocket      *m_pTcpSocket;          // 通讯TCP
+    SearchDeviceUdp *m_pSearchUdpSocket;    // 广播的通讯UDP
 
     // 联调时使用
     int             m_nCacheTimes;      // 通讯缓存次数，支持最大缓存数据为连续3次
@@ -193,10 +211,7 @@ inline QVariantList MainManager::getChannelList()
 {
     return m_lstInputChannel;
 }
-inline bool MainManager::isPad()
-{
-    return m_isPad;
-}
+
 inline QString MainManager::welcomePageBaseInfo_user()
 {
     return m_welcomePageBaseInfo_user;
@@ -221,6 +236,14 @@ inline QString MainManager::welcomePageBaseInfo_unionControl()
 {
     return m_welcomePageBaseInfo_unionControl;
 }
+inline QString MainManager::welcomePageBaseInfo_previewip()
+{
+    return m_welcomePageBaseInfo_previewip;
+}
+inline QString MainManager::welcomePageBaseInfo_previewport()
+{
+    return m_welcomePageBaseInfo_previewport;
+}
 inline void MainManager::setWelcomePageBaseInfo_user(const QString &text)
 {
     m_welcomePageBaseInfo_user = text;
@@ -244,5 +267,13 @@ inline void MainManager::setWelcomePageBaseInfo_savePassword(const QString &text
 inline void MainManager::setWelcomePageBaseInfo_unionControl(const QString &text)
 {
     m_welcomePageBaseInfo_unionControl = text;
+}
+inline void MainManager::setWelcomePageBaseInfo_previewip(const QString &text)
+{
+    m_welcomePageBaseInfo_previewip = text;
+}
+inline void MainManager::setWelcomePageBaseInfo_previewport(const QString &text)
+{
+    m_welcomePageBaseInfo_previewport = text;
 }
 #endif // MAINMANAGER_H

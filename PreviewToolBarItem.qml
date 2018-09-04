@@ -4,7 +4,7 @@ import com.VideoPaintItem 1.0
 
 Rectangle {
     id: previewToolBarItem
-    width: 400; height: 300
+    width: mainWindow.mapToDeviceWidth(400); height: mainWindow.mapToDeviceHeight(300)
     color: "white"
     radius: 20;
     z: 255
@@ -22,7 +22,7 @@ Rectangle {
 
     StandardToolBarItem {
         id: header
-        width: parent.width+2; height: 50;
+        width: parent.width+mainWindow.mapToDeviceWidth(2); height: mainWindow.mapToDeviceHeight(50);
         bLeftToRight: false;
         bLock: true;
         mainTitle: "P";
@@ -45,7 +45,7 @@ Rectangle {
 
                 // 限定右下角
                 previewToolBarItem.x = (previewToolBarItem.x > operatorPage.width-previewToolBarItem.width) ? operatorPage.width-previewToolBarItem.width : previewToolBarItem.x;
-                previewToolBarItem.y = (previewToolBarItem.y > operatorPage.height-previewToolBarItem.height-180) ? operatorPage.height-previewToolBarItem.height-180 : previewToolBarItem.y;
+                previewToolBarItem.y = (previewToolBarItem.y > operatorPage.height-previewToolBarItem.height) ? operatorPage.height-previewToolBarItem.height : previewToolBarItem.y;
             }
             onReleased: {
                 //
@@ -67,7 +67,7 @@ Rectangle {
             model: 4
 
             Rectangle {
-                width: 200; height: 110;
+                width: mainWindow.mapToDeviceWidth(200); height: mainWindow.mapToDeviceHeight(110);
                 color: "#5D778C";
                 border.color: "white";
                 border.width: 1;
@@ -83,7 +83,7 @@ Rectangle {
                     //anchors.top: parent.top;
                 }
                 Rectangle {
-                    width: parent.width; height: 20;
+                    width: parent.width; height: mainWindow.mapToDeviceHeight(20);
                     anchors.bottom: parent.bottom;
                     color: "#00000000";
 
@@ -120,8 +120,8 @@ Rectangle {
                 qsTr("BACK");
             }
         }
-        x: 75;
-        width: 50; height: 25
+        x: mainWindow.mapToDeviceWidth(75);
+        width: mainWindow.mapToDeviceWidth(50); height: mainWindow.mapToDeviceHeight(25)
         anchors.bottom: parent.bottom
 
         font.family: "微软雅黑";
@@ -186,8 +186,8 @@ Rectangle {
                 qsTr("NEXT");
             }
         }
-        x: 275;
-        width: 50; height: 25
+        x: mainWindow.mapToDeviceWidth(275);
+        width: mainWindow.mapToDeviceWidth(50); height: mainWindow.mapToDeviceHeight(25)
         anchors.bottom: parent.bottom
 
         font.family: "微软雅黑"
@@ -256,7 +256,7 @@ Rectangle {
             currentPage = 0;
             for (var i = 0; i < 4; i++) {
                 var item = grid.children[i];
-                if (null == item)
+                if (null === item)
                     continue;
 
                 if (i < channelList.length/2) {
@@ -270,7 +270,7 @@ Rectangle {
                     item.openPreview();
                 } else {
                     // 默认值
-                    item.label = "null";
+                    item.txt = "null";
                 }
             }
         } else {

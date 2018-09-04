@@ -17,14 +17,16 @@ HEADERS += \
     VideoPaintItem.h \
     Player/BCVedioDecodeThread.h \
     Player/BCVedioManager.h \
-    Player/BCVedioPlayerThread.h
+    Player/BCVedioPlayerThread.h \
+    SearchDeviceUdp.h
 
 SOURCES += main.cpp \
     MainManager.cpp \
     VideoPaintItem.cpp \
     Player/BCVedioDecodeThread.cpp \
     Player/BCVedioManager.cpp \
-    Player/BCVedioPlayerThread.cpp
+    Player/BCVedioPlayerThread.cpp \
+    SearchDeviceUdp.cpp
 
 RESOURCES += qml.qrc
 

@@ -37,5 +37,13 @@
         <file>StandardToolBarItem.qml</file>
         <file>resource/test.png</file>
         <file>SuspendBallItem.qml</file>
+        <file>resource/ballclear.png</file>
+        <file>resource/ballecho.png</file>
+        <file>resource/ballmain.png</file>
+        <file>resource/ballpreview.png</file>
+        <file>resource/ballquit.png</file>
+        <file>resource/ballscene.png</file>
+        <file>resource/ballsignal.png</file>
+        <file>SearchDevicePage.qml</file>
     </qresource>
 </RCC>

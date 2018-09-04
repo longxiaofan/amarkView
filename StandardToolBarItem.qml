@@ -5,7 +5,7 @@ Rectangle {
     id: toolBarItem
     radius: 20
     color: "#00000000"
-    width: 200; height: 70;
+    width: mainWindow.mapToDeviceWidth(300); height: mainWindow.mapToDeviceHeight(70);
     clip: true
 
     // 加锁没有动画效果
@@ -22,18 +22,18 @@ Rectangle {
     // 颜色
     property var colorArr: ["#036EB8", "#28C3DD", "#4F778E", "#8C97A8", "#999999"]
 
-    NumberAnimation { id: leftnormalShowAnimation; target: body; property: "width"; from: 20; to: 130; duration: 500}
-    NumberAnimation { id: leftminShowAnimation; target: body; property: "width"; from: 130; to: 20; duration: 500}
+    NumberAnimation { id: leftnormalShowAnimation; target: body; property: "width"; from: mainWindow.mapToDeviceWidth(20); to: mainWindow.mapToDeviceWidth(130); duration: 500}
+    NumberAnimation { id: leftminShowAnimation; target: body; property: "width"; from: mainWindow.mapToDeviceWidth(130); to: mainWindow.mapToDeviceWidth(20); duration: 500}
 
     ParallelAnimation {     // 并行
         id: rightnormalShowAnimation;
-        NumberAnimation { target: body; property: "x"; from: 20; to: 130; duration: 500}
-        NumberAnimation { target: body; property: "width"; from: 130; to: 20; duration: 500}
+        NumberAnimation { target: body; property: "x"; from: mainWindow.mapToDeviceWidth(20); to: mainWindow.mapToDeviceWidth(130); duration: 500}
+        NumberAnimation { target: body; property: "width"; from: mainWindow.mapToDeviceWidth(130); to: mainWindow.mapToDeviceWidth(20); duration: 500}
     }
     ParallelAnimation {     // 并行
         id: rightminShowAnimation;
-        NumberAnimation { target: body; property: "x"; from: 130; to:20 ; duration: 500}
-        NumberAnimation { target: body; property: "width"; from: 20; to: 130; duration: 500}
+        NumberAnimation { target: body; property: "x"; from: mainWindow.mapToDeviceWidth(130); to: mainWindow.mapToDeviceWidth(20); duration: 500}
+        NumberAnimation { target: body; property: "width"; from: mainWindow.mapToDeviceWidth(20); to: mainWindow.mapToDeviceWidth(130); duration: 500}
     }
 
     function normalShow() {

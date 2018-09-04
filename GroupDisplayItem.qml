@@ -40,26 +40,28 @@ Rectangle {
     property bool bFolder: false
 
     // 添加阴影
-    layer.enabled: true
-    layer.effect: DropShadow {
-        transparentBorder: true
-        horizontalOffset: 5
-        verticalOffset: 5
-        radius: 8.0
-        samples: 16
-        color: "#44000000"
-    }
+//    layer.enabled: true
+//    layer.effect: DropShadow {
+//        transparentBorder: true
+//        horizontalOffset: 5
+//        verticalOffset: 5
+//        radius: 8.0
+//        samples: 16
+//        color: "#44000000"
+//    }
 
     // header
     Rectangle {
         id: groupHeader
-        x:10; y:10;
-        width: parent.width-20; height: 36
+        x:mainWindow.mapToDeviceWidth(10); y:mainWindow.mapToDeviceHeight(10);
+        width: parent.width-mainWindow.mapToDeviceWidth(20); height: mainWindow.mapToDeviceHeight(50)
         color: "#00000000";
 
         Rectangle {
-            x: parent.width-70
-            width: 32; height: width
+            width: mainWindow.mapToDeviceWidth(44); height: width
+            anchors.right: parent.right
+            anchors.rightMargin: mainWindow.mapToDeviceWidth(55)
+            anchors.verticalCenter: parent.verticalCenter
             radius: 5
             color: "#00000000";
 
@@ -77,16 +79,18 @@ Rectangle {
 
             color: "white"
             font.family: "微软雅黑"
-            font.pixelSize: 22
+            font.pixelSize: 20
             font.bold: true
-            smooth: true
+            //smooth: true
             clip: true
         }
 
         Button {
             id: saveSceneBtn
-            width: 32; height: 32
+            width: mainWindow.mapToDeviceWidth(44); height: mainWindow.mapToDeviceHeight(44)
             anchors.right: parent.right
+            anchors.rightMargin: mainWindow.mapToDeviceWidth(5)
+            anchors.verticalCenter: parent.verticalCenter
 
             background: Rectangle {
                 border.width: 0
@@ -167,11 +171,11 @@ Rectangle {
                 newX = (newX < 0) ? 0 : newX;
                 newY = (newY < 0) ? 0 : newY;
 
-                newW = (newW < 200) ? 200 : newW;
-                newH = (newH < 100) ? 100 : newH;
+                newW = (newW < mainWindow.mapToDeviceWidth(200)) ? mainWindow.mapToDeviceWidth(200) : newW;
+                newH = (newH < mainWindow.mapToDeviceHeight(100)) ? mainWindow.mapToDeviceHeight(100) : newH;
 
-                // ??? 需要修改内部信号窗的尺寸
-                groupDisplayItem.resizeAllSignalWindow(newW-20, newH-55);
+                // 需要修改内部信号窗的尺寸
+                groupDisplayItem.resizeAllSignalWindow(newW-mainWindow.mapToDeviceWidth(20), newH-mainWindow.mapToDeviceHeight(80));
 
                 groupDisplayItem.x = newX;
                 groupDisplayItem.y = newY;
@@ -211,22 +215,17 @@ Rectangle {
                     var i, y, currentGItem;
 
                     // 当已经被归纳并且向左拖动超过一半归纳区域时放大
-                    if (bFolder && (groupDisplayItem.x < roomTabView.width-300)) {
+                    if (bFolder && (groupDisplayItem.x < roomTabView.width-mainWindow.mapToDeviceWidth(250))) {
                         bFolder = false;
                         bPress = false;
 
                         // 按比例放大里面的信号窗
-                        resizeAllSignalWindow(800-20, 400-55);
+                        resizeAllSignalWindow(mainWindow.mapToDeviceWidth(800-20), mainWindow.mapToDeviceHeight(400-80));
 
-//                        groupDisplayItem.width = 800;
-//                        groupDisplayItem.height = 400;
-//                        groupDisplayItem.x = roomTabView.width/2-400;
-//                        groupDisplayItem.y = roomTabView.height/2-200;
-
-                        normalShow(roomTabView.width/2-400, roomTabView.height/2-200);
+                        normalShow(roomTabView.width/2-mainWindow.mapToDeviceWidth(400), roomTabView.height/2-mainWindow.mapToDeviceHeight(200));
 
                         // 重新排序
-                        y = 10;
+                        y = mainWindow.mapToDeviceHeight(10);
                         for (i = 0; i < roomTabView.groupDisplayList.length; i++) {
                             currentGItem = roomTabView.groupDisplayList[i];
                             if (null == currentGItem)
@@ -239,21 +238,21 @@ Rectangle {
                             currentGItem.moveYByAnimation( y );
                             //currentGItem.y = y;
                             debugArea.appendLog(currentGItem.groupID+","+y+"~~~~~~~~~~");
-                            y += 110;
+                            y += mainWindow.mapToDeviceHeight(110);
                         }
                     }
                     if (!bFolder
-                            && (groupDisplayItem.width < roomTabView.width*0.8)
+                            && (groupDisplayItem.width < roomTabView.width*0.8) // 当尺寸大于整体界面的百分之八十时不归档
                             && (groupDisplayItem.height < roomTabView.height*0.8)
                             && (groupDisplayItem.x+groupDisplayItem.width == roomTabView.width)) {
                         bFolder = true;
                         bPress = false;
 
                         // 按比例缩小里面信号窗
-                        resizeAllSignalWindow(200-20, 100-55);
+                        resizeAllSignalWindow(mainWindow.mapToDeviceWidth(200-20), mainWindow.mapToDeviceHeight(100-80));
 
                         // 排列所有屏组
-                        y = 10;
+                        y = mainWindow.mapToDeviceHeight(10);
                         for (i = 0; i < roomTabView.groupDisplayList.length; i++) {
                             currentGItem = roomTabView.groupDisplayList[i];
                             if (null == currentGItem)
@@ -262,24 +261,14 @@ Rectangle {
                             // 判断排在上面的屏组
                             if (currentGItem.groupID < groupDisplayItem.groupID) {
                                 if ( currentGItem.bFolder )
-                                    y += 110;
+                                    y += mainWindow.mapToDeviceHeight(110);
                             } else if (currentGItem.groupID > groupDisplayItem.groupID) {
                                 if ( currentGItem.bFolder )
-                                    currentGItem.y += 110;
+                                    currentGItem.y += mainWindow.mapToDeviceHeight(110);
                             }
                         }
 
-
-//                        groupDisplayItem.width = 200;
-//                        groupDisplayItem.height = 100;
-//                        groupDisplayItem.x = roomTabView.width-210;
-//                        groupDisplayItem.y = y;
-
-                        folderShow(roomTabView.width-210, y);
-//                        folderShowAnimation.x = roomTabView.width-210;
-//                        folderShowAnimation.y = y;
-//                        folderShowAnimation.gItem = groupDisplayItem;
-//                        folderShowAnimation.start();
+                        folderShow( y );
                     }
                 }
                 onReleased: {
@@ -298,7 +287,7 @@ Rectangle {
     Rectangle {
         id: groupDisplayBody
 
-        width: parent.width-20; height: parent.height-55
+        width: parent.width-mainWindow.mapToDeviceWidth(20); height: parent.height-mainWindow.mapToDeviceHeight(80)
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: groupHeader.bottom
 
@@ -309,7 +298,7 @@ Rectangle {
             property int chid: 0
 
             onEntered: {
-                debugArea.appendLog("drop onEntered~~~~~~~~~~~~~~")
+                debugArea.appendLog("drop onEntered.")
                 drag.accepted = roomTabView.isTopGroupDisplay( groupDisplayItem.groupID );
                 chid = drag.getDataAsString("chid");
                 var chname = drag.getDataAsString("chname");
@@ -341,7 +330,7 @@ Rectangle {
                         }
                     }
 
-                    if ("0" == mainMgr.welcomePageBaseInfo_unionControl) {
+                    if (0 === mainWindow.g_connectMode) {
                         // 创建信号窗
                         var signalWindow = appendSignalWindow(chid, -1, l, t, r-l, b-t);
 
@@ -356,12 +345,162 @@ Rectangle {
                 drop.accepted = roomTabView.isTopGroupDisplay( groupDisplayItem.groupID );
             }
 
-            MouseArea {
+            // 两点缩放
+            PinchArea {
                 anchors.fill: parent
 
-                onPressed: {
-                    // 置顶
-                    roomTabView.setGroupDisplayTop(groupDisplayItem.groupID, groupDisplayItem.z);
+                enabled: !bFolder
+
+                property int srcWidth: 0
+                property int srcHeight: 0
+                property int srcCenterX: 0
+                property int srcCenterY: 0
+
+                onPinchStarted: {
+                    srcWidth = groupDisplayItem.width;
+                    srcHeight = groupDisplayItem.height;
+                    srcCenterX = groupDisplayItem.x+(groupDisplayItem.width/2);
+                    srcCenterY = groupDisplayItem.y+(groupDisplayItem.height/2);
+
+                    pinch.accepted = true;
+                }
+
+                onPinchUpdated: {
+                    // pinch.scale 缩放倍数
+                    // pinch.angle 角度，标准坐标系0~180  -180~0
+                    var newW = pinch.scale*srcWidth;
+                    var newH = pinch.scale*srcHeight;
+                    var newX = srcCenterX - (newW/2);
+                    var newY = srcCenterY - (newH/2);
+
+                    // 限定最大值
+                    if (newW > roomTabView.width) {
+                        newX = 0;
+                        newW = roomTabView.width;
+                    } else if (newX+newW > roomTabView.width) {
+                        newX = roomTabView.width - newW;
+                    }
+
+                    if (newH > roomTabView.height) {
+                        newY = 0;
+                        newH = roomTabView.height;
+                    } else if (newY+newH > roomTabView.height) {
+                        newY = roomTabView.height - newH;
+                    }
+
+                    // 限定最小值
+                    newX = (newX < 0) ? 0 : newX;
+                    newY = (newY < 0) ? 0 : newY;
+
+                    newW = (newW < mainWindow.mapToDeviceWidth(200)) ? mainWindow.mapToDeviceWidth(200) : newW;
+                    newH = (newH < mainWindow.mapToDeviceHeight(100)) ? mainWindow.mapToDeviceHeight(100) : newH;
+
+                    // 需要修改内部信号窗的尺寸
+                    groupDisplayItem.resizeAllSignalWindow(newW-mainWindow.mapToDeviceWidth(20), newH-mainWindow.mapToDeviceHeight(80));
+
+                    groupDisplayItem.x = newX;
+                    groupDisplayItem.y = newY;
+
+                    groupDisplayItem.width = newW;
+                    groupDisplayItem.height = newH;
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+
+                    onPressed: {
+                        bPress = true;
+                        // 置顶
+                        roomTabView.setGroupDisplayTop(groupDisplayItem.groupID, groupDisplayItem.z);
+
+                        groupDisplayItem.pressX = mouseX
+                        groupDisplayItem.pressY = mouseY
+                    }
+                    onPositionChanged: {
+                        if ( !bPress )
+                            return;
+
+                        // 计算偏移量
+                        groupDisplayItem.x += mouseX-groupDisplayItem.pressX
+                        groupDisplayItem.y += mouseY-groupDisplayItem.pressY
+
+                        // 限定左上角
+                        groupDisplayItem.x = (groupDisplayItem.x < 0) ? 0 : groupDisplayItem.x;
+                        groupDisplayItem.y = (groupDisplayItem.y < 0) ? 0 : groupDisplayItem.y;
+
+                        // 限定右下角
+                        groupDisplayItem.x = (groupDisplayItem.x > roomTabView.width-groupDisplayItem.width) ? roomTabView.width-groupDisplayItem.width : groupDisplayItem.x;
+                        groupDisplayItem.y = (groupDisplayItem.y > roomTabView.height-groupDisplayItem.height) ? roomTabView.height-groupDisplayItem.height : groupDisplayItem.y;
+
+                    }
+                    onReleased: {
+                        bPress = false;
+                        if ( roomTabView.isTopGroupDisplay(groupDisplayItem.groupID) ) {
+                            if (saveSceneBtn.contains(mapToItem(saveSceneBtn, mouse.x, mouse.y))) {
+                                saveSceneBtn.customOnClicked();
+                            }
+                        }
+
+                        // 当尺寸同时小于父类尺寸的0.6时靠近右边框缩小锁定
+                        var i, y, currentGItem;
+
+                        // 当已经被归纳并且向左拖动超过一半归纳区域时放大
+                        if (bFolder && (groupDisplayItem.x < roomTabView.width-mainWindow.mapToDeviceWidth(250))) {
+                            bFolder = false;
+                            bPress = false;
+
+                            // 按比例放大里面的信号窗
+                            resizeAllSignalWindow(mainWindow.mapToDeviceWidth(800-20), mainWindow.mapToDeviceHeight(400-80));
+
+                            normalShow(roomTabView.width/2-mainWindow.mapToDeviceWidth(400), roomTabView.height/2-mainWindow.mapToDeviceHeight(200));
+
+                            // 重新排序
+                            y = mainWindow.mapToDeviceHeight(10);
+                            for (i = 0; i < roomTabView.groupDisplayList.length; i++) {
+                                currentGItem = roomTabView.groupDisplayList[i];
+                                if (null == currentGItem)
+                                    continue;
+
+                                // 判断排在上面的屏组
+                                if ( !currentGItem.bFolder )
+                                    continue;
+
+                                currentGItem.moveYByAnimation( y );
+                                //currentGItem.y = y;
+                                debugArea.appendLog(currentGItem.groupID+","+y+"~~~~~~~~~~");
+                                y += mainWindow.mapToDeviceHeight(110);
+                            }
+                        }
+                        if (!bFolder
+                                && (groupDisplayItem.width < roomTabView.width*0.8) // 当尺寸大于整体界面的百分之八十时不归档
+                                && (groupDisplayItem.height < roomTabView.height*0.8)
+                                && (groupDisplayItem.x+groupDisplayItem.width == roomTabView.width)) {
+                            bFolder = true;
+                            bPress = false;
+
+                            // 按比例缩小里面信号窗
+                            resizeAllSignalWindow(mainWindow.mapToDeviceWidth(200-20), mainWindow.mapToDeviceHeight(100-80));
+
+                            // 排列所有屏组
+                            y = mainWindow.mapToDeviceHeight(10);
+                            for (i = 0; i < roomTabView.groupDisplayList.length; i++) {
+                                currentGItem = roomTabView.groupDisplayList[i];
+                                if (null == currentGItem)
+                                    continue;
+
+                                // 判断排在上面的屏组
+                                if (currentGItem.groupID < groupDisplayItem.groupID) {
+                                    if ( currentGItem.bFolder )
+                                        y += mainWindow.mapToDeviceHeight(110);
+                                } else if (currentGItem.groupID > groupDisplayItem.groupID) {
+                                    if ( currentGItem.bFolder )
+                                        currentGItem.y += mainWindow.mapToDeviceHeight(110);
+                                }
+                            }
+
+                            folderShow( y );
+                        }
+                    }
                 }
             }
         }
@@ -373,13 +512,13 @@ Rectangle {
             fillMode: Image.Stretch
             source: "resource/background.png"
 
-            Image {
-                height: parent.height/2; width: height
-                anchors.centerIn: parent
+//            Image {
+//                height: parent.height/2; width: height
+//                anchors.centerIn: parent
 
-                fillMode: Image.Stretch
-                source: "resource/backgroundcenter.png"
-            }
+//                fillMode: Image.Stretch
+//                source: "resource/backgroundcenter.png"
+//            }
         }
 
         Canvas {
@@ -387,6 +526,7 @@ Rectangle {
             width: parent.width; height: parent.height;
             contextType: "2d";
             onPaint: {
+                console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 var row = groupDisplayItem.arrayY;
                 var col = groupDisplayItem.arrayX;
                 var singleWidth = width/col;
@@ -456,15 +596,17 @@ Rectangle {
     ParallelAnimation {     // 文件夹显示
         id: folderShowAnimation;
 
-        function setPos(x, y) {
-            xAnimation.to = x;
+        function setPos( y ) {
+            wAnimation.to = mainWindow.mapToDeviceWidth(200);
+            hAnimation.to = mainWindow.mapToDeviceHeight(100);
+            xAnimation.to = roomTabView.width-wAnimation.to-mainWindow.mapToDeviceWidth(10);
             yAnimation.to = y;
         }
 
         NumberAnimation { id: xAnimation; target: groupDisplayItem; property: "x"; duration: 200}
         NumberAnimation { id: yAnimation; target: groupDisplayItem; property: "y"; duration: 200}
-        NumberAnimation { target: groupDisplayItem; property: "width"; to: 200; duration: 200}
-        NumberAnimation { target: groupDisplayItem; property: "height"; to: 100; duration: 200}
+        NumberAnimation { id: wAnimation; target: groupDisplayItem; property: "width"; duration: 200}
+        NumberAnimation { id: hAnimation; target: groupDisplayItem; property: "height"; duration: 200}
     }
 
     ParallelAnimation {     // 常规显示
@@ -477,14 +619,14 @@ Rectangle {
 
         NumberAnimation { id: nxAnimation; target: groupDisplayItem; property: "x"; duration: 200}
         NumberAnimation { id: nyAnimation; target: groupDisplayItem; property: "y"; duration: 200}
-        NumberAnimation { target: groupDisplayItem; property: "width"; to: 800; duration: 200}
-        NumberAnimation { target: groupDisplayItem; property: "height"; to: 400; duration: 200}
+        NumberAnimation { target: groupDisplayItem; property: "width"; to: mainWindow.mapToDeviceWidth(800); duration: 200}
+        NumberAnimation { target: groupDisplayItem; property: "height"; to: mainWindow.mapToDeviceHeight(400); duration: 200}
     }
 
     NumberAnimation { id: moveyAnimation; target: groupDisplayItem; property: "y"; duration: 200}
 
-    function folderShow(tx, ty) {
-        folderShowAnimation.setPos(tx, ty);
+    function folderShow( ty ) {
+        folderShowAnimation.setPos( ty );
         folderShowAnimation.start();
     }
 
@@ -523,7 +665,6 @@ Rectangle {
     }
 
     function resizeAllSignalWindow(newW, newH) {
-        debugArea.appendLog(newW+","+newH+","+groupDisplayBody.width+","+groupDisplayBody.height+"~~~~~~~~~~`")
         for (var i = 0; i < signalWindowList.length; i++) {
             var signalWindow = signalWindowList[i];
             if (null == signalWindow)
@@ -534,19 +675,61 @@ Rectangle {
             var ar = (groupDisplayItem.actualWidth/groupDisplayBody.width)*(signalWindow.x+signalWindow.width);
             var at = (groupDisplayItem.actualHeight/groupDisplayBody.height)*signalWindow.y;
             var ab = (groupDisplayItem.actualHeight/groupDisplayBody.height)*(signalWindow.y+signalWindow.height);
-            debugArea.appendLog(al+","+ar+","+at+","+ab+"~~~~~~~~~~`****")
 
             var vl = (newW/groupDisplayItem.actualWidth)*al;
             var vr = (newW/groupDisplayItem.actualWidth)*ar;
             var vt = (newH/groupDisplayItem.actualHeight)*at;
             var vb = (newH/groupDisplayItem.actualHeight)*ab;
-            debugArea.appendLog(vl+","+vr+","+vt+","+vb+"~~~~~~~~~~`****")
 
             signalWindow.x = vl;
             signalWindow.y = vt;
             signalWindow.width = vr-vl;
             signalWindow.height = vb-vt;
         }
+    }
+
+    ParallelAnimation {
+        id: resizeGroupDisplayAnimation;
+
+        function setRange(sx, sy, sw, sh, dx, dy, dw, dh) {
+            rGXA.from = sx; rGXA.to = dx;
+            rGYA.from = sy; rGYA.to = dy;
+            rGWA.from = sw; rGWA.to = dw;
+            rGHA.from = sh; rGHA.to = dh;
+        }
+
+        NumberAnimation { id: rGXA; target: groupDisplayItem; property: "x"; duration: 200}
+        NumberAnimation { id: rGYA; target: groupDisplayItem; property: "y"; duration: 200}
+        NumberAnimation { id: rGWA; target: groupDisplayItem; property: "width"; duration: 200}
+        NumberAnimation { id: rGHA; target: groupDisplayItem; property: "height"; duration: 200}
+    }
+
+    function resizeGroupDisplay(offsetW, offsetH) {
+        // 计算新的组位置
+        var gl = (roomTabView.width+offsetW)*groupDisplayItem.x/roomTabView.width;
+        var gw = (roomTabView.width+offsetW)*groupDisplayItem.width/roomTabView.width;
+        var gt = (roomTabView.height+offsetH)*groupDisplayItem.y/roomTabView.height;
+        var gh = (roomTabView.height+offsetH)*groupDisplayItem.height/roomTabView.height;
+
+        // 循环内部信号窗
+        for (var i = 0; i < signalWindowList.length; i++) {
+            var signalWindow = signalWindowList[i];
+            if (null == signalWindow)
+                continue;
+
+            // 获取实际坐标
+            var al = (gw-mainWindow.mapToDeviceWidth(20))*signalWindow.x/groupDisplayBody.width;
+            var aw = (gw-mainWindow.mapToDeviceWidth(20))*signalWindow.width/groupDisplayBody.width;
+            var at = (gh-mainWindow.mapToDeviceHeight(80))*signalWindow.y/groupDisplayBody.height;
+            var ah = (gh-mainWindow.mapToDeviceHeight(80))*signalWindow.height/groupDisplayBody.height;
+
+            signalWindow.resizeSignalWindowByAnimation(signalWindow.x, signalWindow.y, signalWindow.width, signalWindow.height,
+                                                 al, at, aw, ah);
+        }
+
+        resizeGroupDisplayAnimation.setRange(groupDisplayItem.x, groupDisplayItem.y, groupDisplayItem.width, groupDisplayItem.height,
+                                             gl, gt, gw, gh);
+        resizeGroupDisplayAnimation.start();
     }
 
     // 置顶信号窗
@@ -598,7 +781,8 @@ Rectangle {
         var at = (groupDisplayItem.actualHeight/groupDisplayBody.height)*t;
         var ab = (groupDisplayItem.actualHeight/groupDisplayBody.height)*(t+h);
 
-        mainMgr.gwinsize(groupID, winid, chid, al, at, ar, ab);
+        mainWindow.sigGWinsize(groupID, winid, chid, al, at, ar, ab);
+        //mainMgr.gwinsize(groupID, winid, chid, al, at, ar, ab);
     }
 
     function gwinswitch( winid ) {
@@ -724,7 +908,7 @@ Rectangle {
         var singleDisplayWidth = groupDisplayItem.actualWidth/groupDisplayItem.arrayX;
         var singleDisplayHeight = groupDisplayItem.actualHeight/groupDisplayItem.arrayY;
 
-        if ("0" == mainMgr.welcomePageBaseInfo_unionControl) {
+        if (0 === mainWindow.g_connectMode) {
             // 创建信号窗
             var signalWindow = appendSignalWindow(chid, -1, 0, 0, singleDisplayWidth, singleDisplayHeight);
 
@@ -832,13 +1016,5 @@ Rectangle {
 
         // 添加日志
         debugArea.appendLog( "remove signal window." );
-    }
-
-    // 刷新房间排列 待删--
-    function refreshPainter(arrX, arrY) {
-        arrayX = arrX;
-        arrayY = arrY;
-
-        groupPainter.update();
     }
 }

@@ -23,19 +23,19 @@ Rectangle {
             source: "resource/backgroundcenter.png"
         }
 
-        MouseArea {
-            anchors.fill: parent
-            onDoubleClicked: {
-                debugArea.visible = !debugArea.visible;
-            }
-        }
+//        MouseArea {
+//            anchors.fill: parent
+//            onDoubleClicked: {
+//                debugArea.visible = !debugArea.visible;
+//            }
+//        }
     }
 
     // login
     Rectangle {
         id: loginArea
-        y: parent.height-200;
-        width: 200; height: 180;
+        y: parent.height-mainWindow.mapToDeviceHeight(260);
+        width: mainWindow.mapToDeviceWidth(400); height: mainWindow.mapToDeviceHeight(240);
         anchors.horizontalCenter: parent.horizontalCenter
 
         color: "#00000000"
@@ -59,8 +59,8 @@ Rectangle {
 
         // user
         Rectangle {
-            y: 40
-            width: 180; height: 30;
+            y: mainWindow.mapToDeviceHeight(45)
+            width: mainWindow.mapToDeviceWidth(360); height: mainWindow.mapToDeviceHeight(50);
             anchors.horizontalCenter: loginArea.horizontalCenter
 
             visible: (pageIndex == 0) ? true : false;
@@ -69,8 +69,8 @@ Rectangle {
             // 内部偏移像素值没有规律，只是为了样式调整
             Rectangle {
                 id: userIcon
-                x: 5; y: 4
-                width: 22; height: 22
+                x: mainWindow.mapToDeviceWidth(5); y: mainWindow.mapToDeviceHeight(5)
+                width: mainWindow.mapToDeviceWidth(40); height: mainWindow.mapToDeviceHeight(40)
 
                 color: "#00000000"
 
@@ -82,8 +82,8 @@ Rectangle {
             }
             TextField {
                 id: user
-                x: 40
-                width: 130; height: 30
+                x: mainWindow.mapToDeviceWidth(80)
+                width: mainWindow.mapToDeviceWidth(280); height: mainWindow.mapToDeviceHeight(50)
 
                 placeholderText: "user"
 
@@ -96,8 +96,8 @@ Rectangle {
         }
         // password
         Rectangle {
-            y: 75
-            width: 180; height: 30
+            y: mainWindow.mapToDeviceHeight(100)
+            width: mainWindow.mapToDeviceWidth(360); height: mainWindow.mapToDeviceHeight(50);
             anchors.horizontalCenter: loginArea.horizontalCenter
 
             visible: (pageIndex == 0) ? true : false;
@@ -106,8 +106,8 @@ Rectangle {
             // 内部偏移像素值没有规律，只是为了样式调整
             Rectangle {
                 id: passwordIcon
-                x: 5; y: 4
-                width: 22; height: 22
+                x: mainWindow.mapToDeviceWidth(5); y: mainWindow.mapToDeviceHeight(5);
+                width: mainWindow.mapToDeviceWidth(40); height: mainWindow.mapToDeviceHeight(40);
 
                 color: "#00000000"
 
@@ -120,8 +120,8 @@ Rectangle {
 
             TextField {
                 id: password
-                x: 40
-                width: 130; height: 30
+                x: mainWindow.mapToDeviceWidth(80)
+                width: mainWindow.mapToDeviceWidth(280); height: mainWindow.mapToDeviceHeight(50);
 
                 placeholderText: "password"
 
@@ -135,8 +135,8 @@ Rectangle {
 
         // ip
         Rectangle {
-            y: 40
-            width: 180; height: 30;
+            y: mainWindow.mapToDeviceHeight(45)
+            width: mainWindow.mapToDeviceWidth(360); height: mainWindow.mapToDeviceHeight(50);
             anchors.horizontalCenter: loginArea.horizontalCenter
 
             visible: (pageIndex == 1) ? true : false;
@@ -144,19 +144,23 @@ Rectangle {
 
             // 内部偏移像素值没有规律，只是为了样式调整
             Rectangle {
-                width: 35; height: 30;
+                x: mainWindow.mapToDeviceWidth(5);
+                width: mainWindow.mapToDeviceWidth(65); height: mainWindow.mapToDeviceHeight(50);
                 color: "#00000000"
 
                 Text {
                     text: qsTr("IP")
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
+                    font.family: "微软雅黑"
+                    font.pixelSize: 12
                 }
             }
             TextField {
                 id: ip
-                x: 40
-                width: 130; height: 30
+                x: mainWindow.mapToDeviceWidth(80)
+                width: mainWindow.mapToDeviceWidth(280); height: mainWindow.mapToDeviceHeight(50);
+                clip: true;
 
                 placeholderText: "IP"
 
@@ -169,8 +173,8 @@ Rectangle {
         }
         // port
         Rectangle {
-            y: 75
-            width: 180; height: 30
+            y: mainWindow.mapToDeviceHeight(100);
+            width: mainWindow.mapToDeviceWidth(360); height: mainWindow.mapToDeviceHeight(50);
             anchors.horizontalCenter: loginArea.horizontalCenter
 
             visible: (pageIndex == 1) ? true : false;
@@ -178,20 +182,24 @@ Rectangle {
 
             // 内部偏移像素值没有规律，只是为了样式调整
             Rectangle {
-                width: 35; height: 30;
-                color: "#00000000"
+                x: mainWindow.mapToDeviceWidth(5);
+                width: mainWindow.mapToDeviceWidth(65); height: mainWindow.mapToDeviceHeight(50);
+                color: "#00000000";
+                clip: true;
 
                 Text {
                     text: qsTr("PORT")
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
+                    font.family: "微软雅黑"
+                    font.pixelSize: 12
                 }
             }
 
             TextField {
                 id: port
-                x: 40
-                width: 130; height: 30
+                x: mainWindow.mapToDeviceWidth(80);
+                width: mainWindow.mapToDeviceWidth(280); height: mainWindow.mapToDeviceHeight(50);
 
                 placeholderText: "PORT"
 
@@ -204,8 +212,8 @@ Rectangle {
         }
         // save password or sync
         Rectangle {
-            x: 20; y: 113
-            width: 180; height: 15
+            x: mainWindow.mapToDeviceWidth(30); y: mainWindow.mapToDeviceHeight(155);
+            width: mainWindow.mapToDeviceWidth(360); height: mainWindow.mapToDeviceHeight(30);
 
             visible: (pageIndex == 0) ? true : false;
             color: "#00000000"
@@ -221,6 +229,7 @@ Rectangle {
                 }
 
                 indicator: Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
                     implicitWidth: 15
                     implicitHeight: 15
                     radius: 1
@@ -237,8 +246,8 @@ Rectangle {
         }
         // union control
         Rectangle {
-            x: 20; y: 113
-            width: 180; height: 15
+            x: mainWindow.mapToDeviceWidth(30); y: mainWindow.mapToDeviceHeight(155);
+            width: mainWindow.mapToDeviceWidth(360); height: mainWindow.mapToDeviceHeight(30);
 
             visible: (pageIndex == 0) ? false : true;
             color: "#00000000"
@@ -254,6 +263,7 @@ Rectangle {
                 }
 
                 indicator: Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
                     implicitWidth: 15
                     implicitHeight: 15
                     radius: 1
@@ -278,8 +288,8 @@ Rectangle {
                     (pageIndex == 0) ? qsTr("Login") : qsTr("Sure")
                 }
             }
-            x: 25; y: 135
-            width: 70; height: 30
+            x: mainWindow.mapToDeviceWidth(30); y: mainWindow.mapToDeviceHeight(190);
+            width: mainWindow.mapToDeviceWidth(160); height: mainWindow.mapToDeviceHeight(40);
 
             font.family: "微软雅黑"
             font.pixelSize: 14
@@ -302,19 +312,32 @@ Rectangle {
 
             onClicked: {
                 if (pageIndex == 0) {
-                    // 首先保存变量
-                    mainMgr.welcomePageBaseInfo_user = user.text;
-                    mainMgr.welcomePageBaseInfo_password = password.text;
-                    mainMgr.welcomePageBaseInfo_savePassword = savePswCheckBox.checked ? "1" : "0";
-                    mainMgr.welcomePageBaseInfo_ip = ip.text;
-                    mainMgr.welcomePageBaseInfo_port = port.text;
-                    mainMgr.welcomePageBaseInfo_unionControl = unionCtrlCheckBox.checked ? "1" : "0";
-                    mainMgr.SaveWelcomePageBaseInfo();
+                    // 如果是服务器则直接登录
+                    if ( unionCtrlCheckBox.checked ) {
+                        mainWindow.g_connectMode = 1;
+                        mainMgr.welcomePageBaseInfo_user = user.text;
+                        mainMgr.welcomePageBaseInfo_password = password.text;
+                        mainMgr.welcomePageBaseInfo_savePassword = savePswCheckBox.checked ? "1" : "0";
+                        mainMgr.welcomePageBaseInfo_ip = ip.text;
+                        mainMgr.welcomePageBaseInfo_port = port.text;
+                        mainMgr.welcomePageBaseInfo_unionControl = "1";
+                        mainMgr.welcomePageBaseInfo_previewip = ip.text;
+                        mainMgr.welcomePageBaseInfo_previewport = port.text;
+                        mainMgr.SaveWelcomePageBaseInfo();
 
-                    // login
-                    mainMgr.Login();
+                        // login
+                        mainMgr.LoginByServer();
+                    } else {
+                        mainWindow.g_connectMode = 0;
+                        mainMgr.welcomePageBaseInfo_user = user.text;
+                        mainMgr.welcomePageBaseInfo_password = password.text;
+                        mainMgr.welcomePageBaseInfo_savePassword = savePswCheckBox.checked ? "1" : "0";
+                        mainMgr.welcomePageBaseInfo_unionControl = "0";
+                        mainMgr.SaveWelcomePageBaseInfo();
+
+                        mainMgr.Authentication();
+                    }
                 } else {
-                    // 如果是设置页则直接返回到登录界面
                     pageIndex = 0;
                 }
             }
@@ -329,8 +352,8 @@ Rectangle {
                     (pageIndex == 0) ? qsTr("Set") : qsTr("Back");
                 }
             }
-            x: 105; y: 135
-            width: 70; height: 30
+            x: mainWindow.mapToDeviceWidth(220); y: mainWindow.mapToDeviceHeight(190);
+            width: mainWindow.mapToDeviceWidth(160); height: mainWindow.mapToDeviceHeight(40);
 
             font.family: "微软雅黑"
             font.pixelSize: 14

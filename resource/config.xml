@@ -2,7 +2,7 @@
         <SystemUser>
                 <User id="1" user="admin" password="" level="0"/>
 	</SystemUser>
-        <WelcomeBaseInfo user="admin" password="" savePassword="0" ip="192.168.1.89" port="18000" unionControl="1"/>
+        <WelcomeBaseInfo user="admin" password="" savePassword="0" ip="192.168.1.4" port="8000" unionControl="0" previewip="192.168.1.100" previewport="8206"/>
 	<Device ip="" port="">
                 <Channel/>
 	</Device>

@@ -15,7 +15,9 @@ VideoPaintItem::~VideoPaintItem()
 {
     if (NULL != m_pMainMgr) {
         BCVedioManager *pMgr = m_pMainMgr->GetPreviewMgr();
-        pMgr->Detach( this );
+        if (NULL != pMgr) {
+            pMgr->Detach( this );
+        }
     }
 }
 
@@ -33,6 +35,9 @@ void VideoPaintItem::UpdateChannel(int chid)
 {
     if (NULL != m_pMainMgr) {
         BCVedioManager *pMgr = m_pMainMgr->GetPreviewMgr();
+        if (NULL == pMgr)
+            return;
+
         pMgr->Detach( this );
         m_chid = chid;
         pMgr->Attach( this );
@@ -42,10 +47,14 @@ void VideoPaintItem::UpdateChannel(int chid)
 void VideoPaintItem::OpenPreview(int w, int h)
 {
     m_bPreview = true;
+    w = (w/4)*4;
     m_size = QSize(w, h);
 
     if (NULL != m_pMainMgr) {
         BCVedioManager *pMgr = m_pMainMgr->GetPreviewMgr();
+        if (NULL == pMgr)
+            return;
+
         pMgr->Attach( this );
     }
 }
@@ -54,6 +63,9 @@ void VideoPaintItem::ClosePreview()
     m_bPreview = false;
     if (NULL != m_pMainMgr) {
         BCVedioManager *pMgr = m_pMainMgr->GetPreviewMgr();
+        if (NULL == pMgr)
+            return;
+
         pMgr->Detach( this );
 
         // 更新空图片

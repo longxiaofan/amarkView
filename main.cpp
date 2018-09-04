@@ -29,8 +29,11 @@ int main(int argc, char *argv[])
         return -1;
 
     // c++ invoke function of qml
-    QObject* root = engine.rootObjects().first();
+    QObject *root = engine.rootObjects().first();
     mainMgr.SetQMLRoot( root );
+
+    // signal-slot
+    QObject::connect(root, SIGNAL(sigGWinsize(int,int,int,int,int,int,int)), &mainMgr, SLOT(onGWinsize(int,int,int,int,int,int,int)));
 
     return app.exec();
 }

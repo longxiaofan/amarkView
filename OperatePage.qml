@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 import QtQml.Models 2.3
 import QtQml 2.2
-import QtGraphicalEffects 1.0
+//import QtGraphicalEffects 1.0
 
 import com.MainManager 1.0
 
@@ -21,10 +21,7 @@ Rectangle {
     property bool bSceneViewShow: false
     property bool bPreviewShow: false
 
-    // INFORCOM
-    property bool bHideHDChannel: false
-
-    // background
+    // background image
     Image {
         anchors.fill: parent
 
@@ -40,178 +37,33 @@ Rectangle {
         }
     }
 
-    // 主工具栏
-    Rectangle {
-        id: mainToolBar
-        width: 600; height: 180;
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        color: "#00000000"
-
-        ListModel {
-            id: mainToolBarModel
-
-            Component.onCompleted: {
-                // 默认构造4个基础按钮，type=0，场景按钮type=1，外加groupid和id
-                if (0 == mainWindow.language) {
-                    mainToolBarModel.append({"type":"0","id":0,"groupid":0,"textSrc":"信号源"})
-                    mainToolBarModel.append({"type":"0","id":1,"groupid":0,"textSrc":"场景"})
-                    mainToolBarModel.append({"type":"0","id":2,"groupid":0,"textSrc":"预监"})
-                    mainToolBarModel.append({"type":"0","id":3,"groupid":0,"textSrc":"回显"})
-                    mainToolBarModel.append({"type":"0","id":4,"groupid":0,"textSrc":"清屏"})
-                } else {
-                    mainToolBarModel.append({"type":"0","id":0,"groupid":0,"textSrc":"SIGNAL"})
-                    mainToolBarModel.append({"type":"0","id":1,"groupid":0,"textSrc":"SCENE"})
-                    mainToolBarModel.append({"type":"0","id":2,"groupid":0,"textSrc":"PREVIEW"})
-                    mainToolBarModel.append({"type":"0","id":3,"groupid":0,"textSrc":"ECHO"})
-                    mainToolBarModel.append({"type":"0","id":4,"groupid":0,"textSrc":"CLEAR"})
-                }
-            }
-        }
-
-        // signal animation
-        NumberAnimation { id: showSignalSrcAnimation; target: signalSource; property: "width"; from: 0; to: 250; duration: 300; }
-        NumberAnimation { id: hideSignalSrcAnimation; target: signalSource; property: "width"; from: 250; to: 0; duration: 300; }
-        NumberAnimation { id: showSceneViewAnimation; target: sceneView; property: "width"; from: 0; to: 250; duration: 300; }
-        NumberAnimation { id: hideSceneViewAnimation; target: sceneView; property: "width"; from: 250; to: 0; duration: 300; }
-
-        Component {                   // 自定义代理
-            id: mainToolBarDelegate;
-
-            MainToolBarButton {
-                txt: textSrc
-
-                onClicked: {
-                    if (type == 0) {
-                        if (0 == id) {  // 信号源
-                            bSignalViewShow = !bSignalViewShow;
-                            if ( bSignalViewShow ) {
-                                showSignalSrcAnimation.start();
-                            } else {
-                                hideSignalSrcAnimation.start();
-                            }
-                        } else if (1 == id) {   // 场景
-                            bSceneViewShow = !bSceneViewShow;
-                            if ( bSceneViewShow ) {
-                                showSceneViewAnimation.start();
-                            } else {
-                                hideSceneViewAnimation.start();
-                            }
-
-                            // 加载场景数据
-                            if ( bSceneViewShow ) {
-                                sceneView.loadScene();
-                            }
-                        } else if (2 == id) {   // 预监
-                            bPreviewShow = !bPreviewShow;
-                            priviewToolBar.setVisible( bPreviewShow );
-                        } else if (3 == id) {   // 回显
-                            roomTabView.preview();
-                        } else if (4 == id) {   // 清屏
-                            roomTabView.greset();
-                        }
-                    } else {
-                        sceneView.gloadScene( id );
-                    }
-                }
-            }
-        }
-
-        ListView {  // 定义ListView
-            id: mainToolBarView
-            anchors.fill: parent
-            orientation: ListView.Horizontal
-            spacing: 45
-            clip: true
-
-            model: mainToolBarModel
-            delegate: mainToolBarDelegate
-        }
-
-        function updateSceneList() {
-            // 取当前屏组的场景列表
-            var gItem = roomTabView.getCurrentGroupDisplay();
-            if (null != gItem) {
-                var lstScene = mainMgr.getShortCutScene( gItem.groupID );
-
-                // 更新model，删除type=1的，然后重新添加
-                mainToolBarModel.clear();
-                if (0 == mainWindow.language) {
-                    mainToolBarModel.append({"type":"0","id":0,"groupid":0,"textSrc":"信号源"})
-                    mainToolBarModel.append({"type":"0","id":1,"groupid":0,"textSrc":"场景"})
-                    mainToolBarModel.append({"type":"0","id":2,"groupid":0,"textSrc":"预监"})
-                    mainToolBarModel.append({"type":"0","id":3,"groupid":0,"textSrc":"回显"})
-                    mainToolBarModel.append({"type":"0","id":4,"groupid":0,"textSrc":"清屏"})
-                } else {
-                    mainToolBarModel.append({"type":"0","id":0,"groupid":0,"textSrc":"SIGNAL"})
-                    mainToolBarModel.append({"type":"0","id":1,"groupid":0,"textSrc":"SCENE"})
-                    mainToolBarModel.append({"type":"0","id":2,"groupid":0,"textSrc":"PREVIEW"})
-                    mainToolBarModel.append({"type":"0","id":3,"groupid":0,"textSrc":"ECHO"})
-                    mainToolBarModel.append({"type":"0","id":4,"groupid":0,"textSrc":"CLEAR"})
-                }
-
-                for (var i = 0; i < lstScene.length/2; i++) {
-                    var id = lstScene[i*2+0];
-                    var name = lstScene[i*2+1];
-                    mainToolBarModel.append({"type":"1","id":id,"groupid":gItem.groupID,"textSrc":name})
-                }
-            }
-        }
-
-        // 实现拖放事件
-        DropArea {
-            anchors.fill: parent
-
-            property int sid: -1
-            property var sname
-
-            onEntered: {
-                sid = drag.getDataAsString("sid");
-                sname = drag.getDataAsString("sname");
-            }
-            onPositionChanged: {
-                drag.accepted = (-1 != sid) ? true : false;
-            }
-            onDropped: {
-                if (drop.supportedActions == Qt.CopyAction) {
-                    var gItem = roomTabView.getCurrentGroupDisplay();
-                    if (null != gItem) {
-                        mainToolBarModel.append({"type":"1","id":sid,"groupid":gItem.groupID,"textSrc":sname})
-
-                        // 后端修改数据
-                        mainMgr.addShortCutScene(gItem.groupID, sid);
-                    }
-                }
-
-                drop.acceptProposedAction();
-                drop.accepted = (-1 != sid) ? true : false;
-            }
-        }
-    }
+    // signal animation
+    NumberAnimation { id: showSignalSrcAnimation; target: signalSource; property: "width"; from: 0; to: mainWindow.mapToDeviceWidth(250); duration: 300; }
+    NumberAnimation { id: hideSignalSrcAnimation; target: signalSource; property: "width"; from: mainWindow.mapToDeviceWidth(250); to: 0; duration: 300; }
+    NumberAnimation { id: showSceneViewAnimation; target: sceneView; property: "width"; from: 0; to: mainWindow.mapToDeviceWidth(250); duration: 300; }
+    NumberAnimation { id: hideSceneViewAnimation; target: sceneView; property: "width"; from: mainWindow.mapToDeviceWidth(250); to: 0; duration: 300; }
 
     // 信号源工具栏
     Rectangle {
         id: signalSource
-        y: 100;
-        width: 0; height: mainWindow.height-mainToolBar.height-100
+        x: 0; y: 0; width: 0; height: parent.height;
         anchors.left: parent.left
-        anchors.leftMargin: -20     // 只要两个圆角
-        radius: 20
+//        anchors.leftMargin: -20     // 只要两个圆角
+//        radius: 20
         clip: true
 
         color: "#3383A3AA"
 
-        // 添加阴影
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 5
-            verticalOffset: 5
-            radius: 8.0
-            samples: 16
-            color: "#44000000"
-        }
+//        // 添加阴影
+//        layer.enabled: true
+//        layer.effect: DropShadow {
+//            transparentBorder: true
+//            horizontalOffset: 5
+//            verticalOffset: 5
+//            radius: 8.0
+//            samples: 16
+//            color: "#44000000"
+//        }
 
         ListModel {
             id: channelModel
@@ -229,9 +81,6 @@ Rectangle {
                         !signalSourceView.minPCGroup;
                     else if (3 == chType) {
                         !signalSourceView.minHDGroup;
-
-                        // INFORCOM
-                        !bHideHDChannel;
                     } else if (8 == chType)
                         !signalSourceView.minVideoGroup;
                     else if (9 == chType)
@@ -239,7 +88,7 @@ Rectangle {
                 }
 
                 Row {
-                    width: 200; height: (group == 0)?80:40;
+                    width: mainWindow.mapToDeviceWidth(300); height: (group == 0)?mainWindow.mapToDeviceHeight(80):mainWindow.mapToDeviceHeight(40);
 
                     visible: {
                         // 分组的标题控制，如果里面没有输入信号则隐藏
@@ -248,8 +97,6 @@ Rectangle {
                                 (signalSourceView.pccount != 0) ? true : false;
                             else if (chType == 3) {
                                 (signalSourceView.hdcount != 0) ? true : false;
-                                // INFORCOM
-                                !bHideHDChannel;
                             } else if (chType == 8)
                                 (signalSourceView.videocount != 0) ? true : false;
                             else if (chType == 9)
@@ -259,7 +106,7 @@ Rectangle {
                     }
 
                     Rectangle {
-                        width: parent.width; height: (group == 0)?60:40;
+                        width: parent.width; height: (group == 0)?mainWindow.mapToDeviceHeight(60):mainWindow.mapToDeviceHeight(40);
                         anchors.verticalCenter: parent.verticalCenter
 
                         property int dragLisence: 0         // 是否允许拖拽
@@ -271,17 +118,7 @@ Rectangle {
                             anchors.fill: parent
                             anchors.left: parent.left
 
-                            //visible: (group == 0)
-                            // INFORCOM
-                            visible: {
-                                if (group == 0) {
-                                    if (3 == chType) {
-                                        !bHideHDChannel;
-                                    } else
-                                        true;
-                                } else
-                                    false;
-                            }
+                            visible: (group == 0)
 
                             bLeftToRight: true;
                             colorIndex: {
@@ -291,10 +128,10 @@ Rectangle {
                                 else if (9 == chType) 3;
                             }
                             mainTitle: {
-                                if (0 == chType) "PC";
-                                else if (3 == chType) "HD";
-                                else if (8 == chType) "VID";
-                                else if (9 == chType) "IPV";
+                                if (0 == chType) "P";
+                                else if (3 == chType) "H";
+                                else if (8 == chType) "V";
+                                else if (9 == chType) "I";
                             }
                             subTitle: "signal list"
 
@@ -305,7 +142,7 @@ Rectangle {
 
                         // channel
                         Rectangle {
-                            width: parent.width-50; height: 40;
+                            width: parent.width-mainWindow.mapToDeviceWidth(50); height: mainWindow.mapToDeviceHeight(40);
                             anchors.horizontalCenter: parent.horizontalCenter;
                             color: ((signalSourceView.currentChID == chID) && (signalSourceView.currentChType == chType)) ? "#8C97A8" : "#5D778C";
                             border.width: 1
@@ -330,7 +167,7 @@ Rectangle {
                         Drag.supportedActions: Qt.CopyAction
                         Drag.dragType: Drag.Automatic
                         Drag.mimeData: {"chid":chID, "chname":name}
-                        //Drag.imageSource: "resource/channelDragIcon.png"  // 全屏不显示
+                        Drag.imageSource: "resource/channelDragIcon.png"  // 全屏不显示
 
                         MouseArea {                         // 设置鼠标区域
                             id: mouseMA
@@ -393,8 +230,8 @@ Rectangle {
 
         ListView {  // 定义ListView
             id: signalSourceView
-            width: 200
-            height: 600
+            width: mainWindow.mapToDeviceWidth(300)
+            height: mainWindow.mapToDeviceHeight(600)
             anchors.verticalCenter: parent.verticalCenter
             clip: true
 
@@ -421,25 +258,24 @@ Rectangle {
     // 场景工具栏
     Rectangle {
         id: sceneView
-        y: 100;
-        width: 0; height: mainWindow.height-mainToolBar.height-100
+        x: parent.width; y: 0; width: 0; height: parent.height;
         anchors.right: parent.right
-        anchors.rightMargin: -20     // 只要两个圆角
-        radius: 20
+//        anchors.rightMargin: -20     // 只要两个圆角
+//        radius: 20
         clip: true
 
         color: "#3383A3AA"
 
-        // 添加阴影
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 5
-            verticalOffset: 5
-            radius: 8.0
-            samples: 16
-            color: "#44000000"
-        }
+//        // 添加阴影
+//        layer.enabled: true
+//        layer.effect: DropShadow {
+//            transparentBorder: true
+//            horizontalOffset: 5
+//            verticalOffset: 5
+//            radius: 8.0
+//            samples: 16
+//            color: "#44000000"
+//        }
 
         // 当前显示场景的屏组ID
         property int gid: 0
@@ -456,7 +292,7 @@ Rectangle {
 
                 Rectangle {
                     color: "#00000000"
-                    width: 200; height: 120;
+                    width: mainWindow.mapToDeviceWidth(300); height: mainWindow.mapToDeviceHeight(120);
 
                     // 场景按照屏组模式显示
                     Rectangle {
@@ -465,13 +301,13 @@ Rectangle {
                         clip: true
                         border.color: "white"
                         border.width: 2
-                        width: parent.width; height: 100
+                        width: parent.width; height: mainWindow.mapToDeviceHeight(100)
                         anchors.verticalCenter: parent.verticalCenter
 
                         // header
                         Rectangle {
                             id: sceneHeader
-                            width: parent.width; height: 30
+                            width: parent.width; height: mainWindow.mapToDeviceHeight(30)
                             color: "#00000000"
                             anchors.top: parent.top
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -494,7 +330,7 @@ Rectangle {
                                 image1: "resource/deleteScene1.png"
                                 image2: "resource/deleteScene2.png"
                                 x: parent.width-30; y: 1;
-                                width: 28; height: 28
+                                width: mainWindow.mapToDeviceWidth(28); height: mainWindow.mapToDeviceHeight(28)
 
                                 onClicked: {
                                     // 删除场景
@@ -506,7 +342,7 @@ Rectangle {
                                 image1: "resource/updateScene1.png"
                                 image2: "resource/updateScene2.png"
                                 x: parent.width-60; y: 1;
-                                width: 28; height: 28
+                                width: mainWindow.mapToDeviceWidth(28); height: mainWindow.mapToDeviceHeight(28)
 
                                 onClicked: {
                                     // 更新场景
@@ -612,8 +448,7 @@ Rectangle {
 
         ListView {  // 定义ListView
             id: sceneListView
-            width: 200
-            height: 600
+            width: mainWindow.mapToDeviceWidth(300); height: mainWindow.mapToDeviceHeight(600)
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             clip: true
@@ -695,7 +530,7 @@ Rectangle {
             if (gItem == null)
                 return;
 
-            if ("0" == mainMgr.welcomePageBaseInfo_unionControl) {
+            if (0 === mainWindow.g_connectMode) {
                 for (var i = 0; i < sceneModel.count; i++) {
                     if (sceneModel.get(i).sid == sid) {
                         sceneModel.remove( sceneModel.get(i).index );   // ??? 索引取法可能不对
@@ -711,22 +546,20 @@ Rectangle {
     // 主操作界面
     Rectangle {
         id: roomTabView
-        x: 250
-        width: mainWindow.width-(250+250);
-        height: mainWindow.height-mainToolBar.height
+        x: 0; y: 0; width: parent.width; height: parent.height;
 
         color: "#2283A3AA"
 
-        // 添加阴影
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 5
-            verticalOffset: 5
-            radius: 8.0
-            samples: 16
-            color: "#44000000"
-        }
+//        // 添加阴影
+//        layer.enabled: true
+//        layer.effect: DropShadow {
+//            transparentBorder: true
+//            horizontalOffset: 5
+//            verticalOffset: 5
+//            radius: 8.0
+//            samples: 16
+//            color: "#44000000"
+//        }
 
         property var groupDisplayList: []
         property Component groupComponent: null
@@ -736,7 +569,7 @@ Rectangle {
             id: roomFolder
             color: "#3383A3AA"
             radius: 10
-            width: 220
+            width: mainWindow.mapToDeviceWidth(220)
             anchors.right: parent.right
             anchors.bottom: parent.bottom
         }
@@ -781,14 +614,7 @@ Rectangle {
             // 切换场景
             if (maxZ != cz) {
                 sceneView.loadScene();
-                mainToolBar.updateSceneList();
             }
-
-            // INFORCOM
-            if (3 == gid)
-                bHideHDChannel = false;
-            else
-                bHideHDChannel = true;
         }
         // 是否是最顶层
         function isTopGroupDisplay( gid ) {
@@ -844,6 +670,83 @@ Rectangle {
     // 预监窗口
     PreviewToolBarItem {
         id: priviewToolBar
+        visible: false
+    }
+
+    // 信号源工具条动画
+    ParallelAnimation {
+        id: showSignalAnimation;
+
+        NumberAnimation { target: signalSource; property: "width"; from: 0; to: mainWindow.mapToDeviceWidth(300); duration: 200}
+        NumberAnimation { target: roomTabView; property: "x"; from: 0; to: mainWindow.mapToDeviceWidth(300); duration: 200}
+        NumberAnimation { target: roomTabView; property: "width"; from: roomTabView.width; to: roomTabView.width-mainWindow.mapToDeviceWidth(300); duration: 200}
+    }
+    ParallelAnimation {
+        id: hideSignalAnimation;
+
+        NumberAnimation { target: signalSource; property: "width"; from: mainWindow.mapToDeviceWidth(300); to: 0; duration: 200}
+        NumberAnimation { target: roomTabView; property: "x"; from: mainWindow.mapToDeviceWidth(300); to: 0; duration: 200}
+        NumberAnimation { target: roomTabView; property: "width"; from: roomTabView.width; to: roomTabView.width+mainWindow.mapToDeviceWidth(300); duration: 200}
+    }
+
+    function setSignalToolBarVisible() {
+        bSignalViewShow = !bSignalViewShow;
+
+        // resize group first 因为函数内对roomTabView进行取值了，后执行可能有偏差
+        for (var i = 0; i < roomTabView.groupDisplayList.length; i++) {
+            var groupDisplay = roomTabView.groupDisplayList[ i ];
+            var tWidth = mainWindow.mapToDeviceWidth(300);
+            groupDisplay.resizeGroupDisplay(bSignalViewShow ? -1*tWidth : tWidth, 0);
+        }
+
+        // resize roomTabView
+        if ( bSignalViewShow )
+            showSignalAnimation.start();
+        else
+            hideSignalAnimation.start();
+    }
+
+    // 场景工具条动画
+    ParallelAnimation {
+        id: showSceneAnimation;
+
+        NumberAnimation { target: sceneView; property: "width"; from: 0; to: mainWindow.mapToDeviceWidth(300); duration: 200}
+        NumberAnimation { target: roomTabView; property: "width"; from: roomTabView.width; to: roomTabView.width-mainWindow.mapToDeviceWidth(300); duration: 200}
+    }
+    ParallelAnimation {
+        id: hideSceneAnimation;
+
+        NumberAnimation { target: sceneView; property: "width"; from: mainWindow.mapToDeviceWidth(300); to: 0; duration: 200}
+        NumberAnimation { target: roomTabView; property: "width"; from: roomTabView.width; to: roomTabView.width+mainWindow.mapToDeviceWidth(300); duration: 200}
+    }
+    function setSceneToolBarVisible() {
+        bSceneViewShow = !bSceneViewShow;
+
+        // resize group first 因为函数内对roomTabView进行取值了，后执行可能有偏差
+        for (var i = 0; i < roomTabView.groupDisplayList.length; i++) {
+            var groupDisplay = roomTabView.groupDisplayList[ i ];
+            var fWidth = mainWindow.mapToDeviceWidth(300);
+            groupDisplay.resizeGroupDisplay(bSceneViewShow ? -1*fWidth : fWidth, 0);
+        }
+
+        // resize roomTabView
+        if ( bSceneViewShow )
+            showSceneAnimation.start();
+        else
+            hideSceneAnimation.start();
+    }
+
+    function setEchoVisible() {
+        roomTabView.preview();
+    }
+
+    function setPreviewVisible() {
+        bPreviewShow = !bPreviewShow;
+        priviewToolBar.setVisible( bPreviewShow );
+    }
+
+    function resetGroupDislay() {
+        roomTabView.greset();
     }
 
     // 初始化输入通道
@@ -881,21 +784,13 @@ Rectangle {
 
         var groupDisplay = roomTabView.groupComponent.createObject(roomTabView, {"groupID": gid, "groupName": gname, "actualWidth": sizeX,
                                                                        "actualHeight":sizeY, "arrayX":arrX, "arrayY":arrY,
-                                                                   "x": gid*50, "y": gid*50, "z": gid, "width": 800, "height": 400} );
+                                                                       "x": gid*mainWindow.mapToDeviceWidth(50),
+                                                                       "y": gid*mainWindow.mapToDeviceHeight(50), "z": gid,
+                                                                       "width": mainWindow.mapToDeviceWidth(800),
+                                                                       "height": mainWindow.mapToDeviceHeight(400)} );
 
         // 将新加房间添加到链表
         roomTabView.groupDisplayList.push( groupDisplay );
-
-//        // 计算文件夹尺寸和位置
-//        var folderH = roomTabView.groupDisplayList.length*110+10;
-//        roomFolder.height = folderH;
-
-//        for (var i = 0; i < roomTabView.groupDisplayList.length; i++) {
-//            var gItem = roomTabView.groupDisplayList[i];
-//            gItem.scale = 0.25;
-
-//            var mapPos = mapFromItem(roomFolder, 10, 10+i*110);
-//        }
     }
 
     function appendSignalWindow(gid, chid, winid, cx, cy, cw, ch) {

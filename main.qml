@@ -10,36 +10,24 @@ ApplicationWindow {
     title: qsTr("拼控软件")
     visibility: Window.FullScreen
 
-    // 页面索引,0:欢迎界面，1:操作界面
+    // 页面索引,0:欢迎界面，1:操作界面，2:选择设备界面
     property int pageIndex: 0
 
     // 语言索引，0：中文；1：英文
     property int language: 1
 
-    // 退出按钮
-    Button {
-        x: parent.width-150; y: 20;
-        width: 100; height: 70
+    // 连接模式，0：单机(演示)；1：联控
+    property int g_connectMode: 0
+
+    signal sigGWinsize(int gid, int winid, int chid, int l, int t, int r, int b);
+
+    // 功能球
+    SuspendBallItem {
+        id: suspendBall
+        x: parent.width-100; y: parent.height/2
         z: 255
 
-        background: Rectangle {
-            border.width: 0
-            border.color: "#00000000"
-            radius: 0
-            color: "#00000000"
-        }
-
-        Image {
-            id: image
-            height: parent.height
-            width: parent.width
-            anchors.centerIn: parent
-            source: "resource/exit.png"
-        }
-
-        onClicked: {
-            Qt.quit();
-        }
+        visible: true
     }
 
     // 登录界面
@@ -49,10 +37,11 @@ ApplicationWindow {
         visible: mainWindow.pageIndex == 0
     }
 
-    // 功能球
-    SuspendBallItem {
-        id: suspendBall
-        x: parent.width-100; y: parent.height/2
+    // 搜索设备界面
+    SearchDevicePage {
+        id: searchPage
+
+        visible: mainWindow.pageIndex == 2
     }
 
     // 主操作界面
@@ -67,8 +56,6 @@ ApplicationWindow {
         id: debugArea
         objectName: "debugArea"                 // c++ 外部调用
 
-        //visible: mainWindow.pageIndex == 1      // 在主界面显示
-        //visible: true;
         visible: false;
 
         y: 100                  // 和主工具条一样高
@@ -145,6 +132,8 @@ ApplicationWindow {
     function showErrorMessageBox( type ) {
         if (1 == type) {
             errorMessageBoxText.text = "获取规模失败."
+        } else if (2 == type) {
+            errorMessageBoxText.text = "用户鉴权失败."
         }
 
         errorMessageBox.visible = true;
@@ -154,19 +143,37 @@ ApplicationWindow {
 
     function onVP4000Config(lstInputChannel, lstGroupDisplay, lstDefaultScene) {
         debugArea.appendLog( lstGroupDisplay );
+        console.log(lstGroupDisplay)
         // 1.输入通道
+        var pcIndex = 1;
+        var ipvIndex = 1;
         operatePage.appendRoot();
         for (var i = 0; i < lstInputChannel.length/3; i++) {
             var chid = lstInputChannel[i*3+0];
             var chtype = lstInputChannel[i*3+1];
             var chname = lstInputChannel[i*3+2];
+            if (0 == chtype)
+                chname = "PC"+(pcIndex++);
+            else
+                chname = "IPV"+(ipvIndex++);
             operatePage.appendChannel(chid, chtype, chname);
         }
 
         // 2.屏组信息
         for (i = 0; i < lstGroupDisplay.length/6; i++) {
             var groupid = lstGroupDisplay[i*6+0];
-            var groupname = "GROUP"+(groupid+1);//lstGroupDisplay[i*6+1];
+            //var groupname = "GROUP"+(groupid+1);//lstGroupDisplay[i*6+1];
+            var groupname = "GROUP";
+            if (1 === groupid)
+                groupname = "55\"LCD 4x3 - VP 4800";
+            if (2 === groupid)
+                groupname = "P1.25LED 1920x1080";
+            if (3 === groupid)
+                groupname = "VP6000";
+            if (4 === groupid)
+                groupname = "Agent Controllor";
+            if (5 === groupid)
+                groupname = "4K Output";
             //var groupname = lstGroupDisplay[i*6+1];
             var formatx = lstGroupDisplay[i*6+2];
             var formaty = lstGroupDisplay[i*6+3];
@@ -191,6 +198,16 @@ ApplicationWindow {
 
         // 4.翻页
         mainWindow.pageIndex = 1;
+    }
+    function serverAppendOnlineDevice(name, ip, port, mask, gateway, mac) {
+        searchPage.serverAppendOnlineDevice(name, ip, port, mask, gateway, mac);
+    }
+    function serverAppendOnlinePreview(ip, port, mac) {
+        searchPage.serverAppendOnlinePreview(ip, port, mac);
+    }
+
+    function serverChangePage(i) {
+        mainWindow.pageIndex = i;
     }
 
     function serverSignalWindowResizeLiscene(gid, winid) {
@@ -221,10 +238,19 @@ ApplicationWindow {
         operatePage.serverChangeLockState(gid, bLock);
     }
 
+    // 所有尺寸按照1920*1080标准转换
+    function mapToDeviceWidth( w ) {
+        return Screen.width*w/1920;
+    }
+    function mapToDeviceHeight( h ) {
+        return Screen.height*h/1080;
+    }
+
     Component.onCompleted: {    // 加载完成后调用
         var result
 
-        debugArea.appendLog( "UI completed" )
+        debugArea.appendLog( "UI completed, w:"+Screen.width+",h:"+Screen.height );
+        console.log(Screen.width, Screen.height)
     }
 }
 

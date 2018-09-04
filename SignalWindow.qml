@@ -41,6 +41,7 @@ Rectangle {
         width: parent.width-2; height: 30;
         anchors.horizontalCenter: parent.horizontalCenter
         color: "#00000000"
+        clip: true
 
         // 如果屏组是归纳状态则不显示header
         visible: !groupDisplayItem.bFolder
@@ -62,8 +63,8 @@ Rectangle {
                 font.family: "微软雅黑"
                 font.pixelSize: 14
                 font.bold: true
-                smooth: true
-                clip: true
+                //smooth: true
+                //clip: true
             }
         }
         // sub title
@@ -84,8 +85,8 @@ Rectangle {
                 font.family: "微软雅黑"
                 font.pixelSize: 8
                 font.bold: false
-                smooth: true
-                clip: true
+                //smooth: true
+                //clip: true
             }
         }
 
@@ -118,7 +119,7 @@ Rectangle {
             function customOnClicked() {
                 debugArea.appendLog("signal window close onclicked.");
 
-                if ("0" == mainMgr.welcomePageBaseInfo_unionControl)
+                if (0 === mainWindow.g_connectMode)
                     groupDisplayItem.removeSignalWindow(winid, true);
                 else
                     mainMgr.gwinswitch(groupDisplayItem.groupID, winid);
@@ -212,8 +213,8 @@ Rectangle {
 
                 font.family: "微软雅黑"
                 font.pixelSize: 14
-                smooth: true
-                clip: true
+                //smooth: true
+                //clip: true
             }
             background: Rectangle {
                 border.width: 1
@@ -330,10 +331,9 @@ Rectangle {
 
             // 两点时取消单点标示符，否则有冲突
             bMousePress = false;
-            debugArea.appendLog("onPinchStarted~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             pinch.accepted = true;
 
-            if ("0" == mainMgr.welcomePageBaseInfo_unionControl)
+            if (0 === mainWindow.g_connectMode)
                 bResizeLiscene = true;
             else {
                 bResizeLiscene = false;
@@ -352,7 +352,6 @@ Rectangle {
 
             // 两点时取消单点标示符，否则有冲突
             bMousePress = false;
-            debugArea.appendLog("onPinchUpdated"+pinch.scale+","+pinch.angle+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             if ( bResizeLiscene ) {
                 var absAngle = Math.abs(pinch.angle);
 
@@ -366,14 +365,12 @@ Rectangle {
                     resizeX = srcCenterX - (newW/2);
 
                     bScaleWindow = 1;
-                    debugArea.appendLog( "scale hor.."+pinch.angle );
                 } else if ((absAngle > 70) && (absAngle < 110)) {
                     // 纵向缩放
                     resizeH = newH;
                     resizeY = srcCenterY - (newH/2);
 
                     bScaleWindow = 1;
-                    debugArea.appendLog( "scale ver.."+pinch.angle );
                 } else {
                     // 横纵同时缩放
                     resizeW = newW;
@@ -383,7 +380,6 @@ Rectangle {
                     resizeY = srcCenterY - (newH/2);
 
                     bScaleWindow = 1;
-                    debugArea.appendLog( "scale hor & ver.."+pinch.angle );
                 }
 
                 if (1 == bScaleWindow) {
@@ -391,14 +387,19 @@ Rectangle {
                     resizeX = (resizeX < 0) ? 0 : resizeX;
                     resizeY = (resizeY < 0) ? 0 : resizeY;
 
-                    resizeW = (resizeW > groupDisplayBody.width) ? groupDisplayBody.width : resizeW;
-                    resizeH = (resizeH > groupDisplayBody.height) ? groupDisplayBody.height : resizeH;
+                    // modify by 20180829，右下角两指缩放会出边界
+                    var resizeR = resizeX+resizeW;
+                    var resizeB = resizeY+resizeH;
+                    resizeR = (resizeR > groupDisplayBody.width) ? groupDisplayBody.width : resizeR;
+                    resizeB = (resizeB > groupDisplayBody.height) ? groupDisplayBody.height : resizeB;
+                    resizeW = resizeR-resizeX;
+                    resizeH = resizeB-resizeY;
 
                     // 限定最小值
                     resizeW = (resizeW < 100) ? 100 : resizeW;
                     resizeH = (resizeH < 50) ? 50 : resizeH;
 
-                    if ("0" == mainMgr.welcomePageBaseInfo_unionControl) {
+                    if (0 === mainWindow.g_connectMode) {
                         // 单机直接修改尺寸
                         parent.x = resizeX;
                         parent.y = resizeY;
@@ -412,7 +413,7 @@ Rectangle {
         }
 
         onPinchFinished: {
-            if ("0" != mainMgr.welcomePageBaseInfo_unionControl) {
+            if (1 === mainWindow.g_connectMode) {
                 mainMgr.RequestOver( groupDisplayItem.groupID );
             }
         }
@@ -441,14 +442,17 @@ Rectangle {
             anchors.fill: parent
 
             enabled: !groupDisplayItem.bLock && !groupDisplayItem.bFolder
-            hoverEnabled: true  // 悬停事件
+            //hoverEnabled: true  // 悬停事件
 
             onPressed: {
                 debugArea.appendLog("onPressed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                bMousePress = true;
                 if ( bRemote ) {
                     // 穿透
                     var dx = Math.round(10000*mouseX/signalWindowBody.width);
                     var dy = Math.round(10000*mouseY/signalWindowBody.height);
+                    if ((dx == 0) && (dy == 0))
+                        return;
 
                     var mouseFlag = 0x0000;
                     if (mouse.button == Qt.LeftButton) {
@@ -463,11 +467,10 @@ Rectangle {
                         mainMgr.SendRemoteCmd(chid, cmd);
                     }
                 } else {
-                    bMousePress = true;
                     signalWindow.pressX = mouseX
                     signalWindow.pressY = mouseY
 
-                    if ("0" == mainMgr.welcomePageBaseInfo_unionControl) {
+                    if (0 === mainWindow.g_connectMode) {
                         bResizeLiscene = true;
 
                         // 置顶
@@ -488,51 +491,48 @@ Rectangle {
                 }
             }
             onPositionChanged: {
-                debugArea.appendLog("onPositionChanged~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                if ( bRemote ) {
+                if (bRemote && bMousePress) {
                     // 穿透
                     // 转换坐标到ui->m_pGenaralBodyWidget
                     var dx = Math.round(10000*mouseX/signalWindowBody.width);
                     var dy = Math.round(10000*mouseY/signalWindowBody.height);
 
                     var mouseFlag = 0x0001;
-
-                    if (0 != mouseFlag) {
+                    if ((0 != mouseFlag) && (dx < 10000) && (dy < 10000)) {
                         var cmd = "M "+mouseFlag+" "+dx+" "+dy+"$$$$";
 
                         mainMgr.SendRemoteCmd(chid, cmd);
                     }
-                } else {
-                    if (bResizeLiscene && bMousePress) {
-                        // 横向缩放
-                        var resizeX = signalWindow.x;
-                        var resizeY = signalWindow.y;
-                        var resizeW = signalWindow.width;
-                        var resizeH = signalWindow.height;
+                }
+                if (bResizeLiscene && bMousePress) {
+                    // 横向缩放
+                    var resizeX = signalWindow.x;
+                    var resizeY = signalWindow.y;
+                    var resizeW = signalWindow.width;
+                    var resizeH = signalWindow.height;
 
-                        // 计算偏移量
-                        resizeX += mouseX-signalWindow.pressX
-                        resizeY += mouseY-signalWindow.pressY
+                    // 计算偏移量
+                    resizeX += mouseX-signalWindow.pressX
+                    resizeY += mouseY-signalWindow.pressY
 
-                        // 限定左上角
-                        resizeX = (resizeX < 0) ? 0 : resizeX;
-                        resizeY = (resizeY < 0) ? 0 : resizeY;
+                    // 限定左上角
+                    resizeX = (resizeX < 0) ? 0 : resizeX;
+                    resizeY = (resizeY < 0) ? 0 : resizeY;
 
-                        // 限定右下角
-                        resizeX = (resizeX > groupDisplayBody.width-resizeW) ? groupDisplayBody.width-resizeW : resizeX;
-                        resizeY = (resizeY > groupDisplayBody.height-resizeH) ? groupDisplayBody.height-resizeH : resizeY;
+                    // 限定右下角
+                    resizeX = (resizeX > groupDisplayBody.width-resizeW) ? groupDisplayBody.width-resizeW : resizeX;
+                    resizeY = (resizeY > groupDisplayBody.height-resizeH) ? groupDisplayBody.height-resizeH : resizeY;
 
-                        if ("0" == mainMgr.welcomePageBaseInfo_unionControl) {
-                            // 单机直接修改尺寸
-                            signalWindow.x = resizeX;
-                            signalWindow.y = resizeY;
-                            signalWindow.width = resizeW;
-                            signalWindow.height = resizeH;
-                        }
-
-                        // 发送指令
-                        groupDisplayItem.gwinsize(winid, chid, resizeX, resizeY, resizeW, resizeH);
+                    if (0 === mainWindow.g_connectMode) {
+                        // 单机直接修改尺寸
+                        signalWindow.x = resizeX;
+                        signalWindow.y = resizeY;
+                        signalWindow.width = resizeW;
+                        signalWindow.height = resizeH;
                     }
+
+                    // 发送指令
+                    groupDisplayItem.gwinsize(winid, chid, resizeX, resizeY, resizeW, resizeH);
                 }
             }
             onReleased: {
@@ -544,7 +544,7 @@ Rectangle {
                     signalWindowSegment.customOnReleased();
                 }
 
-                if ( bRemote ) {
+                if (bRemote && bMousePress) {
                     // 穿透
                     var dx = Math.round(10000*mouseX/signalWindowBody.width);
                     var dy = Math.round(10000*mouseY/signalWindowBody.height);
@@ -561,15 +561,16 @@ Rectangle {
 
                         mainMgr.SendRemoteCmd(chid, cmd);
                     }
-                } else {
-                    if ( bMousePress ) {
-                        bMousePress = false;
-                        resizeByAdsorption();
-                    }
 
-                    if ("0" != mainMgr.welcomePageBaseInfo_unionControl) {
-                        mainMgr.RequestOver( groupDisplayItem.groupID );
-                    }
+                    bMousePress = false;
+                }
+                if ( bMousePress ) {
+                    bMousePress = false;
+                    resizeByAdsorption();
+                }
+
+                if (1 === mainWindow.g_connectMode) {
+                    mainMgr.RequestOver( groupDisplayItem.groupID );
                 }
             }
             onClicked: {
@@ -598,14 +599,17 @@ Rectangle {
     VideoPaintItem {
         id: signalWindowVideo
         anchors.fill: signalWindowBody
+        visible: false
     }
 
     function openPreview() {
         signalWindowVideo.SetBaseInfo(mainMgr, groupDisplayItem.groupID, winid, chid);
         signalWindowVideo.OpenPreview(parent.width, parent.height);
+        signalWindowVideo.visible = true;
     }
     function closePreview() {
         signalWindowVideo.ClosePreview();
+        signalWindowVideo.visible = false;
     }
     function updatePreview() {
         signalWindowVideo.UpdatePreview(parent.width, parent.height);
@@ -640,7 +644,7 @@ Rectangle {
             }
         }
 
-        if ("0" == mainMgr.welcomePageBaseInfo_unionControl) {
+        if (0 === mainWindow.g_connectMode) {
             // 单机直接修改尺寸
             signalWindow.x = resizeX;
             signalWindow.y = resizeY;
@@ -674,7 +678,7 @@ Rectangle {
                 b = Math.min(b, i*singleHeight);
         }
 
-        if ("0" == mainMgr.welcomePageBaseInfo_unionControl) {
+        if (0 === mainWindow.g_connectMode) {
             signalWindow.x = l;
             signalWindow.y = t;
             signalWindow.width = r-l;
@@ -683,5 +687,26 @@ Rectangle {
 
         // 发送指令
         groupDisplayItem.gwinsize(winid, chid, l, t, r-l, b-t);
+    }
+
+    function resizeSignalWindowByAnimation(x, y, width, height, al, at, aw, ah) {
+        resizeSignalWindowAnimation.setRange(x, y, width, height, al, at, aw, ah);
+        resizeSignalWindowAnimation.start();
+    }
+
+    ParallelAnimation {
+        id: resizeSignalWindowAnimation;
+
+        function setRange(sx, sy, sw, sh, dx, dy, dw, dh) {
+            rSXA.target = signalWindow; rSXA.from = sx; rSXA.to = dx;
+            rSYA.target = signalWindow; rSYA.from = sy; rSYA.to = dy;
+            rSWA.target = signalWindow; rSWA.from = sw; rSWA.to = dw;
+            rSHA.target = signalWindow; rSHA.from = sh; rSHA.to = dh;
+        }
+
+        NumberAnimation { id: rSXA; property: "x"; duration: 200}
+        NumberAnimation { id: rSYA; property: "y"; duration: 200}
+        NumberAnimation { id: rSWA; property: "width"; duration: 200}
+        NumberAnimation { id: rSHA; property: "height"; duration: 200}
     }
 }

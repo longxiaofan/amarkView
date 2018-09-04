@@ -6,12 +6,13 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonParseError>
+#include "SearchDeviceUdp.h"
 
 // 需要定义命令结束标识，否则当命令发送过快的时候接收方会自动合并多个命令，造成解析错误
 #define CMDOVERFLAG QString("$$$$")
 
 // 测试代码
-#define TEST
+//#define TEST
 
 MainManager::MainManager()
 {
@@ -21,20 +22,23 @@ MainManager::MainManager()
     m_nRetryTimes = 0;
     m_nCacheTimes = 0;
     m_currentUserID = -1;
+    m_pSearchUdpSocket = NULL;
 
     // preview
     m_pVedioMgr = NULL;
 
-//    // 初始化穿透IP
-//    initRemoteIPList();
+    // 初始化穿透IP
+    //initRemoteIPList();
+    m_lstRemoteIP.append("192.168.1.10");
+    m_lstRemoteIP.append("192.168.1.11");
+    m_lstRemoteIP.append("192.168.1.12");
+    m_lstRemoteIP.append("192.168.1.13");
+    m_lstRemoteIP.append("192.168.1.111");
+    m_lstRemoteIP.append("192.168.1.112");
+    m_lstRemoteIP.append("192.168.1.15");
 
     // 初始化配置文件
     initConfigFile();
-
-    if ( 1 )
-        m_isPad = false;
-    else
-        m_isPad = true;
 }
 
 MainManager::~MainManager()
@@ -54,6 +58,10 @@ MainManager::~MainManager()
         m_pRemoteSocket->disconnectFromHost();
         m_pRemoteSocket->deleteLater();
     }
+    if (NULL != m_pSearchUdpSocket) {
+        delete m_pSearchUdpSocket;
+        m_pSearchUdpSocket = NULL;
+    }
 }
 
 void MainManager::onRequestFormat()
@@ -65,7 +73,7 @@ void MainManager::onRequestFormat()
     if (0 != m_nRetryTimes) {
         m_pTcpSocket->disconnectFromHost();
         m_pTcpSocket->connectToHost(QHostAddress(m_welcomePageBaseInfo_ip), m_welcomePageBaseInfo_port.toInt());
-        m_pTcpSocket->waitForConnected( 5000 );
+        m_pTcpSocket->waitForConnected();
     }
 
     if ("0" == m_welcomePageBaseInfo_unionControl) {
@@ -109,7 +117,7 @@ void MainManager::onRequestFormat()
 }
 void MainManager::onCheckoutRequestFormat()
 {
-    if (m_byteRecv.isEmpty() && (m_nRetryTimes++ < 15) && m_bRequestFormat) {
+    if ((m_nRetryTimes++ < 15) && m_bRequestFormat) {
         onRequestFormat();
     }
 }
@@ -130,7 +138,6 @@ QString MainManager::DecodeJsonKey(const QString &json) {
     QJsonParseError json_error;
     QJsonDocument parse_doucment = QJsonDocument::fromJson(json.toLocal8Bit(), &json_error);
     if(json_error.error != QJsonParseError::NoError) {
-        qDebug() << json_error.errorString();
         return QString();
     }
 
@@ -306,7 +313,6 @@ void MainManager::onRecvTcpMessage()
                 }
 
                 if ( lstGroupDisplayData.isEmpty() ) {
-                    //emit sigDemoMode();
                     return;
                 }
 
@@ -509,9 +515,12 @@ void MainManager::onRecvTcpMessage()
                     // 初始化回显对象
                     if (NULL == m_pVedioMgr) {
 #ifdef TEST
-                        m_pVedioMgr = new BCVedioManager(this, "192.168.1.65", 8206);
+                        m_pVedioMgr = new BCVedioManager(this, "192.168.1.100", 8206);
 #else
-                        m_pVedioMgr = new BCVedioManager(this, m_welcomePageBaseInfo_ip, 8206);
+                        if ( !m_welcomePageBaseInfo_previewip.isEmpty() ) {
+                            m_welcomePageBaseInfo_previewport = "8206";
+                            m_pVedioMgr = new BCVedioManager(this, m_welcomePageBaseInfo_previewip, m_welcomePageBaseInfo_previewport.toInt());
+                        }
 #endif
                     }
 
@@ -1038,9 +1047,10 @@ void MainManager::DealFormatFromServer(const QString &json)
     // 按ID顺序取值
     QList<int> lstGroupID = mapGroup.keys();
     for (int i = 0; i < lstGroupID.count(); i++) {
-        sServerGroup sgroup = mapGroup.value( i );
+        int gid = lstGroupID.at(i);
+        sServerGroup sgroup = mapGroup.value( gid );
 
-        lstGroupDisplayData << lstGroupID.at(i)
+        lstGroupDisplayData << gid
                             << sgroup.name
                             << sgroup.formatx
                             << sgroup.formaty
@@ -1058,9 +1068,12 @@ void MainManager::DealFormatFromServer(const QString &json)
         // 初始化回显对象
         if (NULL == m_pVedioMgr) {
 #ifdef TEST
-            m_pVedioMgr = new BCVedioManager(this, "192.168.1.65", 8206);
+            m_pVedioMgr = new BCVedioManager(this, "192.168.1.100", 8206);
 #else
-            m_pVedioMgr = new BCVedioManager(this, m_welcomePageBaseInfo_ip, 8206);
+            if ( !m_welcomePageBaseInfo_previewip.isEmpty() ) {
+                m_welcomePageBaseInfo_previewport = "8206";
+                m_pVedioMgr = new BCVedioManager(this, m_welcomePageBaseInfo_previewip, m_welcomePageBaseInfo_previewport.toInt());
+            }
 #endif
 
             // 初始化穿透socket
@@ -1093,6 +1106,7 @@ void MainManager::SendRemoteCmd(int chid, QString cmd)
 {
     QString qsRemoteIP = (m_lstRemoteIP.count() > chid) ? m_lstRemoteIP.at(chid) : "192.168.1.85";
 
+    qDebug() << cmd << "~~~~~";
     if (NULL != m_pRemoteSocket) {
         m_pRemoteSocket->writeDatagram(cmd.toLatin1(), QHostAddress(qsRemoteIP), 8811);
         m_pRemoteSocket->flush();
@@ -1109,12 +1123,93 @@ void MainManager::AppendLog(const QString &log)
         QMetaObject::invokeMethod(pctrlobj, "appendLog", Q_ARG(QVariant, msg));
     }
 }
+void MainManager::LoginByDirect()
+{
+    RequestFormat();
+}
+void MainManager::LoginByDemoMode()
+{
+    // 1.初始化搜索UDP
+    if (NULL != m_pSearchUdpSocket) {
+        delete m_pSearchUdpSocket;
+        m_pSearchUdpSocket = NULL;
+    }
 
-void MainManager::Login()
+    // 2.构造默认数据
+    QVariantList lstGroupDisplayData, lstDefaultScene, lstChannelDataRes;
+
+    for (int i = 0; i < 2; i++) {
+        lstGroupDisplayData.append( QString::number( i ) );
+        lstGroupDisplayData.append( QString( "Demo Room%1" ).arg(i+1) );
+        lstGroupDisplayData.append( QString::number( 4 ) );
+        lstGroupDisplayData.append( QString::number( 4 ) );
+        lstGroupDisplayData.append( QString::number( 1920*4 ) );
+        lstGroupDisplayData.append( QString::number( 1080*4 ) );
+    }
+
+    for (int i = 0; i < 4; i++) {
+        QString chname = "PC";
+        int chtype = 0;
+        if (i == 1) {
+            chname = "VIDEO";
+            chtype = 8;
+        } if (i == 2) {
+            chname = "IPV";
+            chtype = 9;
+        } if (i == 3) {
+            chname = "HD";
+            chtype = 3;
+        }
+
+        for (int j = 0; j < 8; j++) {
+            lstChannelDataRes.append( QString::number( i*8+j ) );
+            lstChannelDataRes.append( QString::number( chtype ) );
+            lstChannelDataRes.append( QString("%1-%2").arg(chname).arg(j+1) );
+        }
+    }
+
+    // call qml function
+    if (NULL != m_pRoot) {
+        QMetaObject::invokeMethod(m_pRoot, "onVP4000Config",
+                                  Q_ARG(QVariant, QVariant::fromValue(lstChannelDataRes)),
+                                  Q_ARG(QVariant, QVariant::fromValue(lstGroupDisplayData)),
+                                  Q_ARG(QVariant, QVariant::fromValue(lstDefaultScene)));
+    }
+}
+void MainManager::Authentication()
 {
     if (NULL == m_pRoot)
         return;
 
+    // 验证用户
+    bool bUserLisence = false;
+    for (int i = 0; i < m_lstSystemUser.count(); i++) {
+        sUser suser = m_lstSystemUser.at( i );
+        if ((suser.uUser != m_welcomePageBaseInfo_user) || (suser.uPassword != m_welcomePageBaseInfo_password))
+            continue;
+
+        bUserLisence = true;
+        break;
+    }
+
+    if ( bUserLisence ) {
+        // 通知翻页
+        if (NULL != m_pRoot) {
+            QMetaObject::invokeMethod(m_pRoot, "serverChangePage", Q_ARG(QVariant, 2));
+        }
+        // 搜索设备
+        if (NULL == m_pSearchUdpSocket) {
+            m_pSearchUdpSocket = new SearchDeviceUdp( this );
+        }
+    } else {
+        // 提示用户鉴权失败
+        if (NULL != m_pRoot) {
+            QMetaObject::invokeMethod(m_pRoot, "showErrorMessageBox", Q_ARG(QVariant, 2));
+        }
+    }
+}
+void MainManager::LoginByServer()
+{
     // new tcp socket
     if (NULL == m_pTcpSocket) {
         m_pTcpSocket = new QTcpSocket();
@@ -1123,34 +1218,52 @@ void MainManager::Login()
         m_pTcpSocket->disconnectFromHost();
     }
 
-    // 直连设备
-    if ("0" == m_welcomePageBaseInfo_unionControl) {
-        // 1.验证用户
-        bool bUserLisence = false;
-        for (int i = 0; i < m_lstSystemUser.count(); i++) {
-            sUser suser = m_lstSystemUser.at( i );
-            if ((suser.uUser != m_welcomePageBaseInfo_user) || (suser.uPassword != m_welcomePageBaseInfo_password))
-                continue;
+    // 联控
+    m_currentUserID = -1;
 
-            bUserLisence = true;
-            break;
-        }
+    m_nRetryTimes = 0;
+    m_pTcpSocket->connectToHost(QHostAddress(m_welcomePageBaseInfo_ip), m_welcomePageBaseInfo_port.toInt());
+    m_pTcpSocket->waitForConnected();
 
-        // 2.获取规模
-        if ( !bUserLisence )
-            return;
+    m_bRequestFormat = true;
+    onRequestFormat();
 
-        m_nRetryTimes = 0;
-        m_pTcpSocket->connectToHost(QHostAddress(m_welcomePageBaseInfo_ip), m_welcomePageBaseInfo_port.toInt());
-        m_pTcpSocket->waitForConnected( 5000 );
-    } else {
-        // 联控
-        m_currentUserID = -1;
-
-        m_nRetryTimes = 0;
-        m_pTcpSocket->connectToHost(QHostAddress(m_welcomePageBaseInfo_ip), m_welcomePageBaseInfo_port.toInt());
-        m_pTcpSocket->waitForConnected( 5000 );
+    // 20秒钟没有结果反向通知前端
+    QTimer::singleShot(20*1000, this, SLOT(onGetFormatError()));
+}
+void MainManager::AppendOnlineDevice(const QString &name, const QString &ip, int port, const QString &mask, const QString &gateway, const QString &mac)
+{
+    if (NULL != m_pRoot) {
+        QMetaObject::invokeMethod(m_pRoot, "serverAppendOnlineDevice",
+                                  Q_ARG(QVariant, QVariant::fromValue(name)),
+                                  Q_ARG(QVariant, QVariant::fromValue(ip)),
+                                  Q_ARG(QVariant, QVariant::fromValue(port)),
+                                  Q_ARG(QVariant, QVariant::fromValue(mask)),
+                                  Q_ARG(QVariant, QVariant::fromValue(gateway)),
+                                  Q_ARG(QVariant, QVariant::fromValue(mac)));
     }
+}
+void MainManager::AppendOnlinePreview(const QString &ip, int port, const QString &mac)
+{
+    if (NULL != m_pRoot) {
+        QMetaObject::invokeMethod(m_pRoot, "serverAppendOnlinePreview",
+                                  Q_ARG(QVariant, QVariant::fromValue(ip)),
+                                  Q_ARG(QVariant, QVariant::fromValue(port)),
+                                  Q_ARG(QVariant, QVariant::fromValue(mac)));
+    }
+}
+void MainManager::RequestFormat()
+{
+    if (NULL == m_pTcpSocket) {
+        m_pTcpSocket = new QTcpSocket();
+        connect(m_pTcpSocket, SIGNAL(readyRead()), this, SLOT(onRecvTcpMessage()));
+    } else {
+        m_pTcpSocket->disconnectFromHost();
+    }
+
+    m_nRetryTimes = 0;
+    m_pTcpSocket->connectToHost(QHostAddress(m_welcomePageBaseInfo_ip), m_welcomePageBaseInfo_port.toInt());
+    m_pTcpSocket->waitForConnected();
 
     m_bRequestFormat = true;
     onRequestFormat();
@@ -1168,6 +1281,32 @@ void MainManager::SendTcpData(const QString &cmd)
     }
 }
 void MainManager::gwinsize(int gid, int winid, int chid, int l, int t, int r, int b)
+{
+    QString cmd;
+    if ("0" == m_welcomePageBaseInfo_unionControl)
+        cmd = QString("gwinsize %1 %2 %3 %4 %5 %6 %7\r\n")
+                .arg(gid)
+                .arg(winid)
+                .arg(chid)
+                .arg(l)
+                .arg(t)
+                .arg(r)
+                .arg(b);
+    else
+        cmd = EncodeStandardJson("winsize", QString("%1 %2 %3 %4 %5 %6 %7 %8 %9")
+                                                .arg(gid)
+                                                .arg(chid)
+                                                .arg(winid)
+                                                .arg(l)
+                                                .arg(t)
+                                                .arg(r)
+                                                .arg(b)
+                                                .arg(0)
+                                                .arg(0));
+
+    SendTcpData( cmd );
+}
+void MainManager::onGWinsize(int gid, int winid, int chid, int l, int t, int r, int b)
 {
     QString cmd;
     if ("0" == m_welcomePageBaseInfo_unionControl)
@@ -1589,22 +1728,7 @@ void MainManager::addscene(int gid, QVariantList lst)
             jsonSceneData.insert("width", w);
             jsonSceneData.insert("height", h);
             jsonSceneData.insert("ipvsegmentation", 1);
-            jsonSceneData.insert("ipvip1", "");
-            jsonSceneData.insert("ipvip2", "");
-            jsonSceneData.insert("ipvip3", "");
-            jsonSceneData.insert("ipvip4", "");
-            jsonSceneData.insert("ipvip5", "");
-            jsonSceneData.insert("ipvip6", "");
-            jsonSceneData.insert("ipvip7", "");
-            jsonSceneData.insert("ipvip8", "");
-            jsonSceneData.insert("ipvip9", "");
-            jsonSceneData.insert("ipvip10", "");
-            jsonSceneData.insert("ipvip11", "");
-            jsonSceneData.insert("ipvip12", "");
-            jsonSceneData.insert("ipvip13", "");
-            jsonSceneData.insert("ipvip14", "");
-            jsonSceneData.insert("ipvip15", "");
-            jsonSceneData.insert("ipvip16", "");
+            jsonSceneData.insert("ipvip", "");
             jsonSceneData.insert("winid", winid);
 
             arrSceneData.append( jsonSceneData );
@@ -1759,22 +1883,7 @@ void MainManager::updatescene(int gid, int sid, QVariantList lst)
             jsonSceneData.insert("width", w);
             jsonSceneData.insert("height", h);
             jsonSceneData.insert("ipvsegmentation", 1);
-            jsonSceneData.insert("ipvip1", "");
-            jsonSceneData.insert("ipvip2", "");
-            jsonSceneData.insert("ipvip3", "");
-            jsonSceneData.insert("ipvip4", "");
-            jsonSceneData.insert("ipvip5", "");
-            jsonSceneData.insert("ipvip6", "");
-            jsonSceneData.insert("ipvip7", "");
-            jsonSceneData.insert("ipvip8", "");
-            jsonSceneData.insert("ipvip9", "");
-            jsonSceneData.insert("ipvip10", "");
-            jsonSceneData.insert("ipvip11", "");
-            jsonSceneData.insert("ipvip12", "");
-            jsonSceneData.insert("ipvip13", "");
-            jsonSceneData.insert("ipvip14", "");
-            jsonSceneData.insert("ipvip15", "");
-            jsonSceneData.insert("ipvip16", "");
+            jsonSceneData.insert("ipvip", "");
             jsonSceneData.insert("winid", winid);
 
             arrSceneData.append( jsonSceneData );
@@ -2146,6 +2255,8 @@ void MainManager::initConfigFile()
     m_welcomePageBaseInfo_ip = "";
     m_welcomePageBaseInfo_port = "";
     m_welcomePageBaseInfo_unionControl = "0";
+    m_welcomePageBaseInfo_previewip = "";
+    m_welcomePageBaseInfo_previewport = "";
 
     // 如果系统内没有配置文件则直接使用系统内的配置文件
     QFile file("qMarkViewConfig.xml");
@@ -2181,6 +2292,8 @@ void MainManager::initConfigFile()
             m_welcomePageBaseInfo_ip = ele.attribute(QString("ip"));
             m_welcomePageBaseInfo_port = ele.attribute(QString("port"));
             m_welcomePageBaseInfo_unionControl = ele.attribute(QString("unionControl"));
+            m_welcomePageBaseInfo_previewip = ele.attribute(QString("previewip"));
+            m_welcomePageBaseInfo_previewport = ele.attribute(QString("previewport"));
         }
 
         if (node.nodeName() == "SystemUser") {
@@ -2248,6 +2361,8 @@ void MainManager::SaveWelcomePageBaseInfo()
         ele.setAttribute(QString("ip"), m_welcomePageBaseInfo_ip);
         ele.setAttribute(QString("port"), m_welcomePageBaseInfo_port);
         ele.setAttribute(QString("unionControl"), m_welcomePageBaseInfo_unionControl);
+        ele.setAttribute(QString("previewip"), m_welcomePageBaseInfo_previewip);
+        ele.setAttribute(QString("previewport"), m_welcomePageBaseInfo_previewport);
     }
 
     // 写入文件
@@ -2309,7 +2424,7 @@ void MainManager::saveConfigFile(QVariantList lstInputChannel, QVariantList lstG
                     } else {
                         // 已经存在的设备
                         // 1.判断通道数量和名字个数能否对应上
-                        if (ele.childNodes().count() != (lstInputChannel.count()/6)) {
+                        if (childEle.childNodes().count() != (lstInputChannel.count()/6)) {
                             bRebuildChannel = true;
                         }
                     }
@@ -2353,7 +2468,7 @@ void MainManager::saveConfigFile(QVariantList lstInputChannel, QVariantList lstG
                             m_lstInputChannel << id << qsCurrentName;
                         }
                     } else {
-                        for (int k = 0; j < childEle.childNodes().count(); k++) {
+                        for (int k = 0; k < childEle.childNodes().count(); k++) {
                             QDomNode channelNode = childEle.childNodes().at(k);
                             if ( !channelNode.isElement() )
                                 continue;
